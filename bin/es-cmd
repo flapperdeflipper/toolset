@@ -1,0 +1,74 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Execute commands on an elasticsearch service
+
+    ${TOOLSET_SCRIPT_NAME} <method> <url> [<data>]
+
+   Arguments:
+    -h, --help   - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} GET /_cluster/allocation/explain?pretty
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    if var::lt "${#}" 2 \
+    || var::equals "${1:-""}" "-h" \
+    || var::equals "${1:-""}" "--help"
+    then
+        usage
+    fi
+
+    ## Get arguments
+    declare -r method="${1:-""}"; shift
+    declare -r url="${1:-""}";    shift
+    declare -r data="${*}"
+    declare -a cmd
+
+    ## Get ES_HOST var or use localhost instead
+    declare es_host="${ES_HOST:-localhost:9200}"
+
+    log::info "Sending: ${method} ${es_host}${url}"
+
+    cmd=(
+        curl \
+        -N \
+        -H 'Content-Type: application/json'
+        -X "${method}"
+        "${es_host}${url}"
+    )
+
+    if [[ -n "${data}" ]]
+    then
+        echo "${data}" | jq empty &>/dev/null \
+            || proc::die "Invalid json!"
+
+        cmd+=(-d "${data}")
+
+        log::info "Data:"
+        log::info "${data}"
+    fi
+
+    if [[ "${method}" == "TRY" ]] || [[ "${method}" == "try" ]]
+    then
+        proc::exit_ok "${cmd[*]}"
+    fi
+
+    command ${cmd[*]}
+
+    echo
+}
+
+main "${@}"

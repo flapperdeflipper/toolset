@@ -1,0 +1,58 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Browse commits in git history
+
+    This script previews a nice overview of git commits in a local git
+    repository. It uses fuzzy finder and shows all diffs in a preview.
+
+    ${TOOLSET_SCRIPT_NAME} [-h|--help]
+
+   Arguments:
+    -h, --help  - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME}
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    if var::ne "${#}" 0 \
+    || var::equals "${1:-""}" "-h" \
+    || var::equals "${1:-""}" "--help"
+    then
+        usage
+    fi
+
+    git log \
+        --graph \
+        --color=always \
+        --format="%C(auto)%h%d %s %C(black)%C(bold)%cr"  \
+    | fzf \
+        --height 90% \
+        --ansi \
+        --no-sort \
+        --reverse \
+        --tiebreak=index \
+        --preview 'f() { set -- $(echo -- "$@" | grep -o "[a-f0-9]\{7\}"); [ $# -eq 0 ] || git show --color=always $1 ; }; f {}' \
+        --bind \
+            "down:down,up:up,shift-down:preview-down,shift-up:preview-up,shift-right:preview-page-down,shift-left:preview-page-up,q:abort,enter:execute:
+                (grep -o '[a-f0-9]\{7\}' | head -1 |
+                xargs -I % sh -c 'git show --color=always % | less -R') << 'FZF-EOF'
+                {}
+FZF-EOF" --preview-window=right:60%
+
+    return 0
+}
+
+main "${@}"

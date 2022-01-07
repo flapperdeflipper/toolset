@@ -1,0 +1,101 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Import the encrypt certificate from the sealed secret controller
+
+    This script retrieves the certificate from the sealed secret controller that
+    can be used for encrypting secrets. It is stored locally on disk for reuse
+    when storing secrets in a git repository.
+
+    ${TOOLSET_SCRIPT_NAME} -c <cluster> [-i|-n]
+
+   Arguments:
+    -i, --controller-name      - The name of the sealed secrets controller
+    -n, --controller-namespace - The namespace of the sealed secrets controller
+
+    -h, --help                 - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} -c cluster1 -n default -i sealed-secrets
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    local cluster=""
+    local controller_name="${KUBESEAL_CONTROLLER_NAME:-sealed-secrets}"
+    local controller_namespace="${KUBESEAL_CONTROLLER_NAMESPACE:-kube-system}"
+
+    var::le "${#}" 1 && usage
+
+    ## Parse command line arguments
+    while [ "${1:-""}" != "" ]
+    do
+       case "${1}" in
+           -h|--help)
+               usage
+           ;;
+
+           -c|--cluster)
+               cluster="${2:-""}"
+               shift
+           ;;
+
+           -i|--controller-name)
+               controller_name="${2:-"${controller_name}"}"
+               shift
+           ;;
+
+           -n|--controller-namespace)
+               controller_namespace="${2:-"${controller_namespace}"}"
+               shift
+           ;;
+
+           *)
+               shift
+           ;;
+       esac
+
+       shift || true
+
+    done
+
+    var::has_value "${cluster}" || usage
+    var::has_value "${controller_name}" || usage
+    var::has_value "${controller_namespace}" || usage
+
+    local -r sealdir="${HOME}/.kubeseal"
+    local -r keyfile="${sealdir}/${cluster}"
+
+    if ! fs::is_dir "${sealdir}"
+    then
+        mkdir -pv "${sealdir}"
+        chmod 0700 "${HOME}/.kubeseal"
+    fi
+
+    if fs::is_file "${keyfile}"
+    then
+        mv "${keyfile}" "${keyfile}.$( date '+%Y%m%d%H%M%S' )"
+    fi
+
+    if ! kubeseal \
+        --controller-namespace "${controller_namespace}" \
+        --controller-name "${controller_name}" \
+        --fetch-cert \
+        > "${keyfile}"
+    then
+        proc::die "Failed to retrieve key from controller"
+    fi
+}
+
+
+main "${@}"

@@ -1,0 +1,64 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Retrieve all elasticsearch shards and show by status
+
+    This script shows the amount of INITIALIZING STARTED UNASSIGNED shards in an
+    elasticsearch cluster by making an API call to the service.
+    Alternatively you can also list all available shards, not just the count
+    per status
+
+    ${TOOLSET_SCRIPT_NAME} [-a|--all|-h|--help]
+
+    Arguments:
+      -a, --all   - List all shards, do not count per state
+      -h, --help  - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} --all
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    if var::gt "${#}" 1 \
+    || var::equals "${1:-""}" "-h" \
+    || var::equals "${1:-""}" "--help"
+    then
+        usage
+    fi
+
+    local  output
+           output="$( es-cmd GET /_cat/shards?v )"
+
+    if var::equals "${1:-""}" "-a" \
+    || var::equals "${1:-""}" "--all"
+    then
+        echo "${output}"
+        exit 0
+    fi
+
+    echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+    echo "@@ Shards:                                                             @@"
+    echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+    echo
+
+    for i in INITIALIZING STARTED UNASSIGNED
+    do
+        echo "$i: $( echo "${output}" | grep "${i}" | wc -l )"
+    done
+
+    echo
+}
+
+
+main "${@}"

@@ -1,0 +1,156 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Setup a root ca for local or testing purposes.
+
+    This script creates a root ca. The root ca is supposed to saved offline and
+    should not be used for generating new certificates. Instead use the
+    ssl-intermediate script to create a new keypair that can be used for
+    generating utility ssl certificates.
+
+    ${TOOLSET_SCRIPT_NAME} -b <basedir> [-c <curve>]
+
+    Arguments:
+      -b, --basedir  - The basedir from where to create certs
+
+    Optional:
+      -c, --curve    - The curve to use (Default: prime256v1)
+      -p, --password - Use a password instead of generating one.
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} --basedir /mnt/storage/certs
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    local password
+    local dir=./certs
+    local curve=prime256v1
+    local -r sslconfig="${HOME}/.openssl/openssl-root-ca.cnf"
+
+    ## check for input
+    var::lt "${#}" 2 && usage
+
+    ## check for dependencies
+    depends::check_list::silent openssl pwgen chronic || return 1
+
+    ## Parse command line arguments
+    while [ "${1:-""}" != "" ]
+    do
+       case "${1}" in
+           -h|--help)
+               usage
+           ;;
+
+           -b|--basedir)
+               dir="${2:-"${dir}"}"
+               shift
+           ;;
+
+           -p|--password)
+              password="${2:-""}"
+              shift
+           ;;
+
+           -c|--curve)
+               curve="${2:-"${curve}"}"
+               shift
+           ;;
+
+           *)
+               usage
+           ;;
+
+       esac
+
+       shift || true
+    done
+
+    local -r basedir="${dir}/root-ca"
+
+    if fs::is_dir "${basedir}"
+    then
+        log::error "${FUNCNAME[0]}: Directory ${basedir} already exists"
+        return 1
+    fi
+
+    ## Create basedir
+    mkdir -p "${basedir}" && cd "${basedir}"
+    cp "${sslconfig}" "${basedir}/openssl.cnf"
+
+    ## Create password for root ca if not given
+    var::is_empty "${password:-""}" \
+        && password="$( pwgen 32 -n 1 | tee "${basedir}/.password" )"
+
+    ## Set environment vars
+    export OPENSSL_CONF="${sslconfig}"
+    export CA_HOME="${basedir}"
+
+
+    log::info "Create directory structure"
+
+    ssl::generate::create_directories \
+        --basedir "${basedir}" \
+        --type "root" \
+        || return 1
+
+    log::info "Creating private key"
+
+    ssl::generate::create_private_key \
+        --basedir "${basedir}" \
+        --password "${password}" \
+        --type "root" \
+        --curve "${curve}" \
+        || return 1
+
+
+    log::info "Creating cert request"
+
+    ssl::generate::create_csr \
+        --basedir "${basedir}" \
+        --password "${password}" \
+        --type "root" \
+        || return 1
+
+
+    log::info "Creating serial file"
+
+    ssl::generate::create_random_serial \
+        --basedir "${basedir}" \
+        --type "root" \
+        || return 1
+
+
+    log::info "Generating a root ca cert"
+
+    ssl::generate::sign_csr \
+        --basedir "${basedir}" \
+        --password "${password}" \
+        --type "root" \
+        --extension "root-ca_ext" \
+        --extra-args "-selfsign -batch" \
+        || return 1
+
+
+    log::info "Creating certificate revocation list"
+
+    ssl::generate::create_crl \
+        --basedir "${basedir}" \
+        --password "${password}" \
+        --type "root" \
+        || return 1
+
+    log::info "Created root key pair in ${basedir} with password ${password}"
+}
+
+
+main "${@}"

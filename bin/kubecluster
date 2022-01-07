@@ -1,0 +1,101 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+function context {
+    local cluster mapping context
+
+    cluster="$( echo "${TOOLSET_SCRIPT_NAME}" | sed -e 's/kube//' )"
+
+    if [[ -f "${HOME}/.kubemap" ]]
+    then
+        mapping="$( grep "^${cluster}:" "${HOME}/.kubemap" | cut -d: -f2 )"
+    fi
+
+    if [[ -n "${mapping}" ]]
+    then
+        context="${mapping}"
+    else
+        context="${cluster}"
+    fi
+
+    printf '%s' "${context}"
+}
+
+
+function wrapperusage {
+    cat <<EOF
+
+    A wrapper script for using kubectl utils per cluster.
+
+    This script is a wrapper that you can symlink to for controlling a k8s
+    cluster using it's own config file.
+
+    Simply create a ~/.kube/config.\$prefix and symlink kube<prefix> to this
+    utility.
+
+    Arguments:
+    -h, --help  - Show this menu
+
+EOF
+
+    exit 0
+}
+
+
+function usage {
+    local cluster
+          cluster="$( context "${TOOLSET_SCRIPT_NAME}" )"
+
+    cat <<EOF
+
+    Manage k8s ${cluster} cluster using this kubectl wrapper.
+
+    This script manages a specific k8s cluster by silently switching the context.
+
+    ${TOOLSET_SCRIPT_NAME} [kubectl arguments]
+
+    Arguments:
+      -h, --help  - Show this menu
+      -i, --info  - Show kubectl help
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} get pods
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    local context
+          context="$( context  "${TOOLSET_SCRIPT_NAME}" )"
+
+    if [[ "${context}" == "cluster" ]]
+    then
+        wrapperusage
+    fi
+
+    if var::lt "${#}" 1 \
+    || var::equals "${1:-""}" "-h" \
+    || var::equals "${1:-""}" "--help"
+    then
+        usage
+    fi
+
+    if var::equals "${1:-""}" "--info" \
+    || var::equals "${1:-""}" "-i"
+    then
+        exec kubectl --help
+    fi
+
+    if ! chronic kubectl config use-context "${context}"
+    then
+        proc::exit_error "kubectl context ${context} not found"
+    fi
+
+    exec kubectl "${@}"
+}
+
+main "${@}"

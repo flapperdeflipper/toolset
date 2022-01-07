@@ -1,0 +1,63 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Show timing for a http request
+
+    This script uses curl to print a basic overview of timings for retrieving a
+    http page
+
+    ${TOOLSET_SCRIPT_NAME} <url> [-h|--help]
+
+    Arguments:
+      -h, --help  - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} http://google.com
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    if var::ne "${#}" 1 \
+    || var::equals "${1:-""}" "-h" \
+    || var::equals "${1:-""}" "--help" \
+    || var::is_empty "${1:-""}" \
+    || ! var::matches "${1:-""}" "http"
+    then
+        usage
+    fi
+
+    local url="${1:-""}"
+
+    exec curl -L -so /dev/null -w "
+    [Info]
+    Status Code:\t%{http_code}
+    HTTP Version:\t%{http_version}
+    Remote IP:\t%{remote_ip}
+
+    [Timing]
+    Connect:        %{time_connect}\tseconds
+    Pre-Transfer:   %{time_pretransfer}\tseconds
+    Redirect Time:  %{time_redirect}\tseconds
+    Transfer:       %{time_starttransfer}\tseconds
+    DNS Lookup:     %{time_namelookup}\tseconds
+    Total Time:     %{time_total}\tseconds
+
+    [Size]
+    Download Size:  %{size_download}\tbytes
+    Header Size:    %{size_header}\tbytes
+    Request Size:   %{size_request}\tbytes
+
+    " "${url}"
+}
+
+main "${@}"

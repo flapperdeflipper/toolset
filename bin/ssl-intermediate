@@ -1,0 +1,211 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Setup an intermediate ca for local or testing purposes.
+
+    This script creates an intermediate ssl certificate when setting up your own
+    ssl certificate chain. It uses the (offline) root ca certificate
+    that can be created using the ssl-rootca script to create an intermediate
+    certificate on a machine. This cert can be used for signing
+    new utilty certificates in a cert chain without having to use the root ca script.
+
+    ${TOOLSET_SCRIPT_NAME} -b <basedir> [-c <curve>]
+
+    Arguments:
+      -b, --basedir - The basedir from where to create certs
+
+    Optional:
+      -c, --curve   - The curve to use (Default: prime256v1)
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} --basedir /mnt/storage/certs
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    local password=""
+    local rootdir=""
+
+    local dir=./certs
+    local curve=prime256v1
+
+    local -r sslconfig="${HOME}/.openssl/openssl-intermediate.cnf"
+
+    ## check for input
+    var::lt "${#}" 2 && usage
+
+    ## check for dependencies
+    depends::check_list::silent openssl pwgen chronic || return 1
+
+    ## Parse command line arguments
+    while [ "${1:-""}" != "" ]
+    do
+       case "${1}" in
+           -h|--help)
+               usage
+           ;;
+
+           -b|--basedir)
+               dir="${2:-"${dir}"}"
+               shift
+           ;;
+
+           -c|--curve)
+               curve="${2:-"${curve}"}"
+               shift
+           ;;
+
+           -p|--password)
+               password="${2:-""}"
+               shift
+           ;;
+
+           -r|--rootdir)
+               rootdir="${2:-""}"
+               shift
+           ;;
+
+           *)
+               usage
+           ;;
+
+       esac
+
+       shift || true
+    done
+
+    local -r basedir="${dir}/intermediate"
+
+    if fs::is_dir "${basedir}"
+    then
+        log::error "${FUNCNAME[0]}: Directory ${basedir} already exists"
+        return 1
+    fi
+
+    if ! var::has_value "${rootdir}"
+    then
+        rootdir="${dir}/root-ca"
+    fi
+
+    if ! fs::is_dir "${rootdir}"
+    then
+        log::error "${FUNCNAME[0]}: Root ca directory cannot be found!"
+        return 1
+    fi
+
+    ## Create basedir
+    mkdir -p "${basedir}" && cd "${basedir}"
+    cp "${sslconfig}" "${basedir}/openssl.cnf"
+
+    ## Create password for intermediate ca
+    var::is_empty "${password}" \
+        && password="$( pwgen 32 -n 1 | tee "${basedir}/.password" )"
+
+    ## Set environment vars
+    export OPENSSL_CONF="${sslconfig}"
+    export CA_HOME="${basedir}"
+
+    log::info "Create directory structure"
+
+    ssl::generate::create_directories \
+        --basedir "${basedir}" \
+        --type intermediate \
+        || return 1
+
+
+    log::info "Creating private key"
+
+    ssl::generate::create_private_key \
+        --basedir "${basedir}" \
+        --password "${password}" \
+        --type intermediate \
+        --curve "${curve}" \
+        || return 1
+
+
+    log::info "Creating cert request"
+
+    ssl::generate::create_csr \
+        --basedir "${basedir}" \
+        --password "${password}" \
+        --type intermediate \
+        --outfile "${basedir}/certreqs/intermediate.csr" \
+        --extra-args "-batch" \
+        || return 1
+
+
+    log::info "Copy cert request to root-ca dir"
+
+    if ! cp "${basedir}/certreqs/intermediate.csr" "${rootdir}/certreqs/"
+    then
+        log::error "${FUNCNAME[0]}: Failed to copy intermedia.csr to ${rootdir}"
+        return 1
+    fi
+
+    export OPENSSL_CONF="${rootdir}/openssl.cnf"
+    export CA_HOME="${rootdir}"
+
+    cd "${rootdir}" || return 1
+
+    log::info "Update serial file"
+
+    ssl::generate::create_random_serial \
+        --basedir "${rootdir}" \
+        --type root \
+        || return 1
+
+
+    log::info "Retrieving root password"
+
+    local rootpass
+    if ! rootpass="$( ssl::generate::read_password_file --basedir "${rootdir}" )"
+    then
+        log::error "${FUNCNAME[0]}: Failed to retrieve password from file"
+        return 1
+    fi
+
+    log::info "Generating a intermediate ca cert"
+
+    ssl::generate::sign_csr \
+        --basedir "${rootdir}" \
+        --password "${rootpass}" \
+        --type intermediate \
+        --extension intermediate-ca_ext \
+        --extra-args "-batch" \
+        || return 1
+
+    log::info "Copying intermediate cert to directory"
+
+    if ! cp "${rootdir}/certs/intermediate.crt" "${basedir}/certs/"
+    then
+        log::error "${FUNCNAME[0]}: Failed to copy cert to ${basedir}"
+        return 1
+    fi
+
+    log::info "Creating certificate revocation list"
+
+    export OPENSSL_CONF="${sslconfig}"
+    export CA_HOME="${basedir}"
+
+    cd "${basedir}" || return 1
+
+    ssl::generate::create_crl \
+        --basedir "${basedir}" \
+        --password "${password}" \
+        --type intermediate \
+        || return 1
+
+    log::info "Created intermediate key pair in ${basedir} with password ${password}"
+}
+
+
+main "${@}"

@@ -1,0 +1,107 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Wait until a condition is met
+
+    This script waits in a loop until a given condition is met.
+    It can be used in scripts to wait and perform a successive action when done.
+
+    ${TOOLSET_SCRIPT_NAME}  --run <command condition> [--sleep <seconds>|--tries <int>|--exitcode <int>]
+
+
+    Required arguments:
+      -r, --run      - The command to run until exit code is X
+
+    Optional arguments:
+      -e, --exitcode - The exit code to expect when done (Default: 0)
+      -s, --sleep    - The amount of time in seconds to sleep between retries (Default: 2)
+      -t, --tries    - The amount of retries to perform before bail (Default: 10)
+
+      -v, --verbose  - Be verbose
+
+    Returns:
+      0 if condition is met
+      1 if condition is not met after N retries
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} --run 'ps -ef | grep -v grep | grep -q kubelet' --tries 5 --sleep 1 --exitcode 1
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    local cmd=""
+    local exitcode=0
+    local sleep_time=2
+    local tries=10
+    local verbose=0
+
+    ## Parse command line arguments
+    while [[ "${1:-""}" != "" ]]
+    do
+        case "${1}" in
+            -r|--run)
+                cmd="${2}"
+                shift
+            ;;
+            -s|--sleep)
+                sleep_time="${2}"
+                shift
+            ;;
+            -t|--tries)
+                tries="${2}"
+                shift
+            ;;
+            -e|--exitcode)
+                exitcode="${2}"
+                shift
+            ;;
+            -v|--verbose)
+                verbose=1
+            ;;
+        esac
+        shift
+    done
+
+    var::is_empty "${cmd}" && usage
+
+    rc=666
+    try=1
+
+    while ( var::ne "${rc}" "${exitcode}" ) || ( var::le "${try}" "${tries}" )
+    do
+         var::ne "${verbose}" 0 && log::info "Command: \"${cmd}\" (Try: ${try})"
+
+         output="$( eval "${cmd}" 2>&1 )"
+         rc="${?}"
+
+	     if var::ne "${verbose}" 0
+         then
+             log::info "Exitcode: ${rc}"
+             log::info "Output:   ${output:-none}"
+         fi
+
+         var::eq "${rc}" "${exitcode}" && break
+
+         try="$(( try + 1 ))"
+
+         sleep "${sleep_time}"
+    done
+
+    if string::equals "${rc}" "${exitcode}"
+    then
+        proc::exit_ok "Command: succeeded"
+    else
+        proc::exit_error "Command: exit ${exitcode} after ${tries} retries"
+    fi
+}
+
+main "${@}"

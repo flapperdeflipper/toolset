@@ -1,0 +1,264 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+## Print help output
+function usage() {
+    cat <<EOF
+
+    Retrieve info or connect with SSH or systems manager to an ec2 instance.
+
+    This script is used to manage ec2 instances on AWS over SSH, SSM or by
+    retrieving information about the given instance.
+
+    Usage:
+      ${TOOLSET_SCRIPT_NAME} --instance <instance> <arguments> <command>
+
+    Required arguments:
+      --instance, -i - The host to connect to with SSH (internal hostname, ip address or aws instance id)
+
+    Options:
+      --console      - Open the ec2 terminal console for an instance
+      --web          - Open this instance in the AWS web console
+      --info         - Show instance information
+      --reboot       - Reboot this instance
+      --terminate    - Terminate this instance
+      --tunnel       - Open a tunnel on a port to this instance
+
+      --region       - The aws region to work in (default: eu-central-1)
+      --dry-run      - Don't do, just fake it
+
+    Example:
+      ## Open a SSH session
+      ${TOOLSET_SCRIPT_NAME} --instance ip-10-30-65-200.eu-central-1.compute.internal
+
+      ## Setup a tunnel (use: local_port:remote_port)
+      ${TOOLSET_SCRIPT_NAME} --instance 10.30.65.200 --tunnel 10080:80
+
+      ## Run command:
+      ${TOOLSET_SCRIPT_NAME} --instance 10.30.65.200 -v "ps -ef"
+
+      ## Open console
+      ${TOOLSET_SCRIPT_NAME} --instance i-0f8d56785c4959883 --console
+
+      ## Info:
+      ${TOOLSET_SCRIPT_NAME} --instance i-0f8d56785c4959883 --info
+
+      ## Open web
+      ${TOOLSET_SCRIPT_NAME} --instance i-0f8d56785c4959883 --web
+
+      ## Reboot
+      ${TOOLSET_SCRIPT_NAME} --instance i-0f8d56785c4959883 --reboot
+
+      ## Terminate
+      ${TOOLSET_SCRIPT_NAME} --instance i-0f8d56785c4959883 --terminate
+
+EOF
+
+   exit "${1:-0}"
+}
+
+function main() {
+    if var::lt "${#}" 1
+    then
+        usage 0
+    fi
+
+    local region="eu-central-1" ## Use eu-central-1 as default region
+
+    local tunnel_ports=""
+    local arguments=""
+    local dryrun=""
+    local instance=""
+
+    local -i ssh=0
+    local -i tunnel=0
+    local -i console=0
+    local -i info=0
+    local -i web=0
+    local -i reboot=0
+    local -i terminate=0
+
+    if [[ "${TOOLSET_SCRIPT_NAME}" == "terminate" ]]
+    then
+        terminate=1
+    fi
+
+    ## Parse command line arguments
+    while [ "${1:-""}" != "" ]
+    do
+        case "${1}" in
+            -h|--help)
+                usage
+            ;;
+
+            -i|--instance)
+                instance="${2}"
+                shift
+            ;;
+
+            --region)
+                region="${2}"
+                shift
+            ;;
+
+            --tunnel)
+                tunnel=1
+                tunnel_ports="${2}"
+                shift
+            ;;
+            --ssh)
+                ssh=1
+                shift
+            ;;
+            --console)
+                console=1
+            ;;
+
+            --info)
+                info=1
+            ;;
+
+            --web)
+                web=1
+            ;;
+
+            --reboot)
+                reboot=1
+            ;;
+
+            --terminate)
+                terminate=1
+            ;;
+
+            --dry-run)
+                dryrun="echo "
+            ;;
+
+            *)
+                arguments="${arguments} ${1} ${2}"
+                shift
+            ;;
+
+        esac
+
+        shift || true
+    done
+
+    total_arguments="$(( console + web + info + reboot + terminate + tunnel + ssh))"
+
+    ## Exit if no instance given
+    var::is_empty "${instance}" && usage
+
+    ## Exit if more than one action is selected
+    var::lt "${total_arguments}" 1 && usage
+
+    ## Exit if no tunnelports
+    if var::eq "${tunnel}" 1 \
+        && ( var::is_empty "${tunnel_ports}" || ! string.contains ":" "${tunnel_ports}" )
+    then
+        usage
+    fi
+
+    ## Check for dependencies
+    depends::check_list "jq" "aws" || exit 1
+
+    ## Get instance id from aws
+    if ! instance_id="$( aws::ec2::instance_id "${instance}" )"
+    then
+        proc::exit_error "Invalid input for ${instance}: Instance input is not an id, not an internal ip and not a DNS name..."
+    fi
+
+    if [ -n "${dryrun}" ]
+    then
+       log::warning "Dry-run detected!"
+    fi
+
+    ## Connect systems manager if no other options or tunnel given
+    if [[ "${ssh}" -eq 1 ]] || [[ "${tunnel}" -eq 1 ]]
+    then
+        local local_port
+        local remote_port
+
+        if [[ "${tunnel}" -eq 1 ]]
+        then
+            local_port="$( echo "${tunnel_ports}"  | cut -d: -f1 )"
+            remote_port="$( echo "${tunnel_ports}" | cut -d: -f2 )"
+
+            log::info "Creating tunnel from ${local_port} to ${instance}:${remote_port}"
+
+            aws::ssm::tunnel "${instance}" "${local_port}" "${remote_port}"
+
+            return $?
+        else
+            local ssh_user="${SSH_USER:-ec2-user}"
+            local ssh_command="aws::ssm::ssh ${instance_id} -t -q -l ${ssh_user} ${arguments}"
+
+            log::info "Connecting to ${instance}"
+
+            # shellcheck disable=SC2086
+            ${dryrun} ${ssh_command}
+
+            return $?
+        fi
+    fi
+
+    ## Console
+    if [[ "${console}" -eq 1 ]]
+    then
+        log::info "Retrieving terminal console for ${instance}"
+
+        ${dryrun} aws::ec2::console_output "${instance}"
+
+        return "${?}"
+    fi
+
+    ## Reboot
+    if [[ "${reboot}" -eq 1 ]]
+    then
+        log::info "Rebooting instance ${instance}"
+
+        if ! interact::prompt_bool
+        then
+            log::error "${FUNCNAME[0]}: Action canceled!"
+            return 1
+        fi
+
+        ${dryrun} aws::ec2::reboot "${instance}"
+
+        return "${?}"
+    fi
+
+    ## Terminate
+    if [[ "${terminate}" -eq 1 ]]
+    then
+        log::info "Terminating instance ${instance}"
+
+        if ! interact::prompt_bool
+        then
+            log::error "${FUNCNAME[0]}: Action canceled!"
+            return 1
+        fi
+
+        ${dryrun} aws::ec2::terminate "${instance}"
+
+        return "${?}"
+    fi
+
+    ## Show web console on request
+    if [[ ${web} -eq 1 ]]
+    then
+        ${dryrun} open "$( aws::ec2::weblink "${instance}" "${region}" )"
+        return $?
+    fi
+
+    ## Show info on request
+    if [ ${info} -eq 1 ]
+    then
+        ${dryrun} aws::ec2::info "${instance}" "${region}"
+        return $?
+    fi
+
+}
+
+main "$@"

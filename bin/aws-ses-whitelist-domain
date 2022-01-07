@@ -1,0 +1,76 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Whitelist a mail domain in AWS SES
+
+    This script registers or retrieves the status and required DNS records
+    for SES domain whitelisting
+
+    ${TOOLSET_SCRIPT_NAME} --domain <fqdn> --region <aws region>
+
+    Arguments:
+      --domain   - The domain name to start ses verification for.
+
+    Options:
+      --region   - The access key id of the aws account
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} --domain example.com --region eu-west-1
+
+EOF
+
+    exit "${1:-0}"
+}
+
+
+
+function main {
+    if var::lt "${#}" 1
+    then
+        usage 0
+    fi
+
+    local region="${AWS_REGION:-eu-central-1}"
+    local domain=""
+
+    ## Parse command line arguments
+    while [ "${1:-""}" != "" ]
+    do
+        case "${1}"
+        in
+	    --help|-h)
+	        usage 0
+	        ;;
+	    --domain|-d)
+            domain="${2:-""}"
+            shift
+	    ;;
+        --region)
+              region="${2:-""}"
+              shift
+        ;;
+        esac
+
+        shift
+    done
+
+    if [ -z "${domain}" ]
+    then
+        usage 0
+    fi
+
+    depends::check_list "jq" "aws" || return 1
+
+    if ! aws::ses::whitelist_domain "${domain}" "${region}"
+    then
+       proc::die "Failed to setup SES for domain repo ${domain}"
+    fi
+}
+
+
+main "${@}"

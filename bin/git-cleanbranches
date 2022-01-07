@@ -1,0 +1,50 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Remove all stale remote and merged local branches
+
+    This script removes all merged and removed remote git branches to cleanup
+    your local git directory.
+
+    ${TOOLSET_SCRIPT_NAME} [-h|--help]
+
+   Arguments:
+    -h, --help  - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME}
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    if var::ge "${#}" 1 \
+    || var::equals "${1:-""}" "-h" \
+    || var::equals "${1:-""}" "--help"
+    then
+        usage
+    fi
+
+    if git::is_dirty
+    then
+      proc::die 'This repo is dirty. Please commit your open changes first!'
+    fi
+
+    git pull --prune \
+      && git branch --merged \
+       | grep -v -E "(^\*|master|main|dev)" \
+       | xargs git branch -d
+
+    return 0
+}
+
+main "${@}"

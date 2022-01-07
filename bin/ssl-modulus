@@ -1,0 +1,84 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Check the modulus of keypairs
+
+    This script retrieves and verifies the modulus of openssl certificate keypairs.
+    It can use both combined files with both the private key and all the
+    certificates in a single file as well separate files for both private keys
+    and all certificates and CSR's.
+
+    ${TOOLSET_SCRIPT_NAME} -f <filename> [-f ...]
+
+    Optional arguments:
+    -f, --file        - A file to check the modulus for, can be chained
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} -f server.key -f server.crt -f server.csr
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    local -a files=()
+
+    ## check for input
+    var::lt "${#}" 2 && usage
+
+    ## check for dependencies
+    depends::check::silent "openssl" || return 1
+
+    ## Parse command line arguments
+    while [ "${1:-""}" != "" ]
+    do
+       case "${1}" in
+           -h|--help)
+               usage
+           ;;
+           -f|--file)
+               if fs::is_file "${2:-""}"
+               then
+                   files+=("${2}")
+               else
+                   log::error "${FUNCNAME[0]}: File ${2} does not exist"
+                   return 1
+               fi
+               shift
+           ;;
+           *)
+               usage
+           ;;
+       esac
+
+       shift || true
+    done
+
+    ## Get the filecount after input parsing
+    length="$( array::length "${files[@]}" )"
+
+    ## Bail out if no files given
+    var::lt "${length}" 1 && usage
+
+    log::debug "Checking the modulues for ${length} files."
+
+    ssl::modulus::show "${files[@]}" | log::stdin
+
+    if ! ssl::modulus::check "${files[@]}"
+    then
+        log::error "${FUNCNAME[0]}: Modulus for files did not match!"
+        return 1
+    fi
+
+    return 0
+}
+
+main "${@}"
+

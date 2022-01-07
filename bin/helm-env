@@ -1,0 +1,316 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+##
+## Show usage info
+##
+
+function usage {
+    cat <<EOF
+
+    Download a specific helm version
+
+    This script downloads a given helm version from github and creates
+    symlinks to the version found in path
+
+    Usage: helm-env <command> [<options>]
+
+    Commands:
+        list-remote   - List all installable versions
+        list          - List all installed versions
+        install       - Install a specific version
+        use           - Switch to specific version
+        uninstall     - Uninstall a specific version
+
+EOF
+
+   exit 0
+
+}
+
+
+##
+## Get current version
+##
+
+function helm::current_version {
+    local current_version
+
+    if [[ ! -L /usr/local/bin/helm ]]
+    then
+        echo "Helm not linked to /usr/local/bin/helm"
+        return 0
+    fi
+
+    current_version="$(
+        basename "$( readlink -f /usr/local/bin/helm )"
+    )"
+
+    printf "%s\n" "${current_version//helm-/}"
+}
+
+
+##
+## List remote versions
+##
+
+function helm::list_remote {
+    local -r versions_url="https://api.github.com/repos/helm/helm/releases?per_page=100"
+    local versions
+
+    log::info "Fetching versions..."
+
+    if ! versions="$(
+        curl -s "${versions_url}" \
+        | jq -r ".[].tag_name" \
+        | grep -v "rc\\|beta\\|alpha" \
+        | sort --version-sort
+    )"
+    then
+        log::error "${FUNCNAME[0]}: Failed to retrieve versions from github api"
+        return 1
+    fi
+
+    printf "%s\n" "${versions}"
+
+    return 0
+}
+
+
+##
+## Install a new version
+##
+
+function helm::install {
+    local version="${1}"
+    local filetype
+
+    if var::is_empty "${version}"
+    then
+        log::error "${FUNCNAME[0]}: You must specify a version!"
+        return 1
+    fi
+
+    if fs::exists "${HOME}/.local/bin/helm-${version}"
+    then
+        log::warning \
+            "${FUNCNAME[0]}: The version ${version} is already installed!"
+        return 0
+    fi
+
+    log::info "Downloading binary..."
+
+    curl -s -L \
+        -o "/tmp/helm-${version}.tar.gz" \
+        "https://get.helm.sh/helm-${version}-darwin-amd64.tar.gz"
+
+    filetype="$( file -b "/tmp/helm-${version}.tar.gz")"
+
+    if ! string::contains "gzip" "${filetype}"
+    then
+        log::error "${FUNCNAME[0]}: Download failed!"
+        return 1
+    fi
+
+    mkdir -p /tmp/helm
+
+    if ! tar -zxf "/tmp/helm-${version}.tar.gz" -C /tmp/helm
+    then
+        log::error "${FUNCNAME[0]}: Failed to unpack helm tarbal /tmp/helm-${version}.tar.gz"
+        return 1
+    fi
+
+    mv "/tmp/helm/darwin-amd64/helm" "${HOME}/.local/bin/helm-${version}"
+    rm -r /tmp/helm
+
+    if fs::is_link "/usr/local/bin/helm"
+    then
+        local actual_version
+        actual_version="$(
+            basename "$( readlink -f "${HOME}/.local/bin/helm" )"
+        )"
+
+        log::warning  "helm is pointing to the ${actual_version//helm-} version"
+        log::info "Do you want me to continue and overwrite it? "
+
+        if ! interact::prompt_bool
+        then
+            log::warning "${FUNCNAME[0]}: Canceled!"
+            log::error "${FUNCNAME[0]}: Nothing done, helm still points to the ${actual_version//helm-} version"
+            return 1
+        fi
+    fi
+
+    helm::use "${version}"
+}
+
+
+##
+## Uninstall an installed version
+##
+
+function helm::uninstall {
+    local -r version="${1}"
+
+    if var::is_empty "${version}"
+    then
+        log::error "${FUNCNAME[0]}: You must specify a version!"
+        return 1
+    fi
+
+    if fs::exists "${HOME}/.local/bin/helm-${version}"
+    then
+        rm "${HOME}/.local/bin/helm-${version}"
+
+        if fs::exists "$HOME/.helm/${version}"
+        then
+           rm -r "$HOME/.helm/${version}"
+        fi
+
+        log::info "The version ${version} is uninstalled!"
+
+    else
+        log::info "Nothing done, the version ${version} is not installed!"
+    fi
+
+    return 0
+}
+
+
+##
+## List all installed versions
+##
+
+function helm::list {
+    local installed_versions
+    local current_version
+
+    installed="$(
+        find "${HOME}/.local/bin/" \
+            -name '*helm-*' \
+            -exec basename {} \; \
+        | grep -Eo 'v([0-9]\.?)+$' \
+        | sed '/^$/d' \
+        | sort --version-sort \
+        || true
+    )"
+
+    current_version="$( helm::current_version )"
+
+    if var::has_value "${current_version}"
+    then
+        # shellcheck disable=SC2001
+        installed_versions="$(
+            echo "${installed_versions}" \
+            | sed "s/${current_version}/${current_version} \*/"
+        )"
+    fi
+
+    if var::is_empty "${installed}"
+    then
+        log::warning "${FUNCNAME[0]}: No installed versions found!"
+        return 1
+    else
+        log::info "Listing installed versions"
+
+        echo "${installed}" | log::stdin OUTPUT
+    fi
+
+    return 0
+}
+
+
+##
+##
+##
+
+function helm::use {
+    version="$1"
+
+    if var::is_empty "${version}"
+    then
+        log::error "${FUNCNAME[0]}: You must specify a version!"
+        return 1
+    fi
+
+    installed="$(find "${HOME}/.local/bin"/ -name "*${version}*")"
+
+    if var::is_empty "${installed}"
+    then
+        log::error "${FUNCNAME[0]}: The ${version} version is not installed!"
+        return 1
+    fi
+
+    actual_link="$( readlink -f /usr/local/bin/helm )"
+
+    if [[ "${actual_link}" =~ ${version} ]]
+    then
+        log::info "helm was already pointing to the ${version} version!"
+    else
+        ln -sf "${HOME}/.local/bin/helm-${version}" /usr/local/bin/helm
+        log::info "Done! Now helm points to the ${version} version"
+
+        export HELM_HOME="$HOME/.helm/${version}"
+    fi
+}
+
+
+function helm::init {
+    actual_version="$(
+        basename "$( readlink -e "${HOME}/.local/bin/helm")"
+    )"
+
+    export HELM_HOME="${HELM_HOME:-${HOME}/.helm/${actual_version//helm-}}"
+
+
+    if [[ ! -e "$HELM_HOME" ]]
+    then
+        mkdir -p "$HELM_HOME"
+    fi
+    if [[ ! -e "${HOME}/.local/bin" ]]
+    then
+        mkdir -p "${HOME}/.local/bin"
+    fi
+
+}
+
+
+function main {
+    local -r action="${1:-""}"
+    local -r parameter="${2:-""}"
+    local -r binary_path="${HOME}/.local/bin"
+
+    depends::check_list::silent jq curl readlink file || return 1
+
+    fs::exists "${binary_path}" || mkdir -p "${binary_path}"
+
+    case "${action}" in
+        list-remote)
+            helm::list_remote
+        ;;
+
+        list)
+            helm::list
+        ;;
+
+        install)
+            helm::install "${parameter}"
+        ;;
+
+        uninstall)
+            helm::uninstall "${parameter}"
+        ;;
+
+        use)
+            helm::use "${parameter}"
+        ;;
+
+        *)
+            usage
+        ;;
+    esac
+}
+
+main "${@}"
+

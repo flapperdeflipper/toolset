@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# vi: ft=bash
+# shellcheck disable=SC2034,SC2155
+
+##
+## This is a wrapper script to use in scripts
+## By setting a shebang for #!/usr/bin/env toolset,
+## You can use the libraries in libraries without need to
+## source or import them manually.
+##
+
+
+## Set error handling if not used in an interactive or login shell
+## Then it should be done in the shell config itself
+if [[ "${-}" != *i* ]] \
+&& [[ -z "${BATS_TEST_FILENAME}" ]] \
+&& ! shopt -q login_shell
+then
+    set -o errexit
+    set -o errtrace
+    set -o nounset
+    set -o pipefail
+fi
+
+
+## Set $0 to the script itself
+declare BASH_ARGV0="${1:-""}"
+
+
+## Set the name of the script
+declare TOOLSET_SCRIPT_NAME="${1:-""}"
+
+
+## Shift the first argument (the scriptname itself, which we've set to $0)
+shift
+
+
+## Set the toolset version number
+declare TOOLSET_VERSION="0.0.1"
+
+
+## Set the path to the bin directory
+declare TOOLSET_BIN_PATH="$( dirname "${BASH_SOURCE[0]}" )"
+
+
+## Set the library path in our environment
+declare TOOLSET_LIBRARY_PATH="$( realpath "${TOOLSET_BIN_PATH}/../library" )"
+
+
+## Load the core library
+source "${TOOLSET_LIBRARY_PATH}/core.sh"
+
+
+## Export toolset variables
+export TOOLSET_VERSION TOOLSET_BIN_PATH TOOLSET_LIBRARY_PATH TOOLSET_SCRIPT_NAME
+
+
+## Import all shell libraries
+import cache
+import logging
+import fs
+import var
+import string
+import array
+import net
+import proc
+import system
+import time
+import interact
+import depends
+import docker
+import sanity
+import aws
+import k8s
+import git
+import ssl
+import tests
+import debug
+
+
+## Import source script if executed using shebang
+if [[ "${-}" != *i* ]] \
+&& [[ -z "${BATS_TEST_FILENAME}" ]] \
+&& ! shopt -q login_shell
+then
+    # shellcheck source=/dev/null
+    source "${TOOLSET_SCRIPT_NAME}"
+fi

@@ -1,0 +1,50 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Reset the working dir to the latest commit
+
+    ${TOOLSET_SCRIPT_NAME}
+
+   Arguments:
+    -h, --help  - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME}
+
+EOF
+
+    exit 0
+}
+
+function main {
+    if ! var::eq "${#}" 0 \
+      || var::equals "${1:-""}" "-h" \
+      || var::equals "${1:-""}" "--help"
+    then
+        usage
+    fi
+
+    if git::is_dirty
+    then
+      proc::die 'This repo is dirty. Please commit your open changes first!'
+    fi
+
+    log::info "Staging all changed files prior to discard"
+
+    git add -A
+
+    log::info "Discarding all changes"
+
+    if git reset --hard
+    then
+        log::info '👍 All changes has been discarded!'
+    fi
+}
+
+main "${@}"

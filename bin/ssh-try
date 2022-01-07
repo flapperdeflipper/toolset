@@ -1,0 +1,53 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Retry ssh-ing into machine after a reboot
+
+    This script tries logging in on a machine over SSH in a loop until it
+    succeeds. It can be used after rebooting machines when you want to access
+    the machine again as soon as it is accessible again.
+
+    ${TOOLSET_SCRIPT_NAME} <host> <user> <count>
+
+   Arguments:
+    -h, --help  - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} 10.0.0.1 flip 10
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+
+    if var::lt "${#}" 1 \
+    || var::equals "${1:-""}" "-h" \
+    || var::equals "${1:-""}" "--help"
+    then
+        usage
+    fi
+
+    declare host="${1}"
+    declare user="${2:-"$(whoami)"}"
+
+    declare -i maxcount="${3:-10}"
+    declare -i count=1
+
+    while ! ssh -o ConnectTimeout=1 -l "${user}" "${host}" \
+       && var::lt "${count}" "${maxcount}"
+    do
+        ((count++))
+        sleep 1
+    done
+}
+
+main "${@}"

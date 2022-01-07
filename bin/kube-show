@@ -1,0 +1,88 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Show all default k8s objects in a namespace
+
+    This script generates an overview of existing k8s objects and prints them in
+    a easy to use view for providing information about a given namespace.
+
+    ${TOOLSET_SCRIPT_NAME} <namespace> <objects>
+
+    Arguments:
+      -h, --help   - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} default pods
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    if var::lt "${#}" 1 \
+    || var::equals "${1:-""}" "-h" \
+    || var::equals "${1:-""}" "--help"
+    then
+        usage
+    fi
+
+    local -r namespace="${1:-kube-system}"
+    local -r opts="${*:2}"
+
+    local line
+          line="$( printf '=%.0s' {1..80} )"
+
+    ## Default objects
+    local -ar default_objects=(
+        pods
+        services
+        daemonsets
+        deployments
+        replicasets
+        replicationcontrollers
+        statefulsets
+    )
+
+    local objects
+
+    ## Form opts
+    if [[ "${opts}" =~ ^\+ ]]
+    then
+        objects="${opts/^\+/} ${default_objects[*]}"
+    else
+        objects="${opts:-${default_objects[*]}}"
+    fi
+
+    printf "%s\n" "${line}"
+    printf "==\n"
+    printf "== Namespace: %s\n" "${namespace}"
+    printf "==\n"
+    printf "%s\n" "${line}"
+    printf "\n"
+
+    local -r IFS=" "
+
+    for object in ${objects}
+    do
+
+        printf "%s\n" "${line}"
+        printf "== Object: %s\n" "${object}"
+        printf "%s\n" "${line}"
+        printf "\n"
+
+        kubectl --namespace "${namespace}" get "${object}" -o wide
+
+        printf "\n\n"
+    done
+}
+
+
+main "${@}"

@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+import os
+import subprocess
+import json
+import sys
+
+
+usage = """
+    Generate commands for testing network policies
+
+    This script generates commands for all services in a namespace to test
+    network connectivity between services after applying netpolicies.
+
+    {script} <namespace> [-h|--help]
+
+    Arguments:
+      -h, --help  - Show this menu
+
+    Example:
+      {script} default
+
+"""
+
+def main():
+    script = os.path.basename(__file__)
+
+    try:
+        namespace = sys.argv[1]
+    except (KeyError, IndexError):
+        exit(usage.format(script=script))
+
+    if namespace == "-h" or namespace == "--help":
+        exit(usage.format(script=script))
+
+    data = json.loads(subprocess.check_output('kubectl -n {} get svc -o json'.format(namespace).split() ))
+    for service in data['items']:
+        if service['spec']['type'] != "ClusterIP":
+            continue
+
+        if not 'clusterIP' in service['spec'] or 'none' in service['spec']['clusterIP'].lower():
+            continue
+
+        host = service['metadata']['name']
+
+        for port in service['spec']['ports']:
+            if port['protocol'] == "TCP":
+                print("echo QUIT | nc -z -v {}:{} >/dev/null".format(host, port['port']))
+
+
+if __name__ == "__main__":
+    main()

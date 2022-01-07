@@ -1,0 +1,52 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Browse utils in ~/bin/
+
+    This script prints a nice overview of all ~/bin scripts
+    using fzf with preview.
+
+    ${TOOLSET_SCRIPT_NAME} [-h|--help]
+
+    Arguments:
+      -h, --help  - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME}
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    if var::gt "${#}" 1 \
+    || var::equals "${1:-""}" "-h" \
+    || var::equals "${0:-""}" "--help"
+    then
+        usage
+    fi
+
+    if ! depends::check_list::silent fzf find
+    then
+        proc::exit_error "This tool depends on fzf"
+    fi
+
+    exec find "${HOME}/bin/" "${HOME}/.toolset/bin" \
+            -follow \
+            -maxdepth 1 \
+            -not -name '*.swp' \
+            -type f \
+        | sort \
+        | fzf --preview "command {} -h" >/dev/null
+}
+
+main "${@}"
+
+

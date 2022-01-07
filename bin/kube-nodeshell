@@ -1,0 +1,195 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+function create_manifest {
+    local nodename="${1:-""}"
+    local podname="${2:-""}"
+    local filename
+
+    filename="$( mktemp )"
+
+    cat > "${filename}" <<EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ${podname}
+spec:
+  containers:
+  - image: debian:stable-slim
+    name: ${podname}
+    env:
+    - name: DEBUG
+      value: "false"
+    - name: LANG
+      value: en_US.UTF-8
+    - name: TERM
+      value: "xterm-256color"
+    - name: PS1
+      value: "${nodename}# "
+    tty: true
+    stdin: false
+    securityContext:
+      privileged: true
+    command:
+    - sleep
+    - infinity
+    volumeMounts:
+    - mountPath: /mnt
+      name: root
+  nodeSelector:
+    kubernetes.io/hostname: ${nodename}
+  restartPolicy: Never
+  securityContext: {}
+  hostIPC: true
+  hostPID: true
+  hostNetwork: true
+  tolerations:
+  - operator: "Exists"
+  volumes:
+  - hostPath:
+      path: /
+    name: root
+EOF
+
+    echo "${filename}"
+}
+
+
+##
+## Print help output
+##
+
+function usage() {
+    cat <<EOF
+
+    Spawn a shell on a kubernetes node
+
+    This script spawns a root shell with hostNetwork enabled
+    and as privileged as possible on a kubernetes node.
+
+    It mounts the root tree of a nodes filesystem in /mnt in a temporary pod and
+    uses chroot to enter the nodes filesystem as if you were logged in on a node
+    itself.
+
+    ${TOOLSET_SCRIPT_NAME} -n <namespace> -s <servername>
+
+    Arguments:
+      --server,    -s - The name of the node to connect to.
+
+    Optional:
+      --namespace, -n - The namespace in which to start a container (Default: kube-system).
+      --podname,   -p - The pod name to use when starting (Default: k8s-nodeshell).
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} -n default -s ip-10-30-65-200.eu-central-1.compute.internal
+
+EOF
+
+    exit 0
+}
+
+
+
+function main {
+    if var::eq "${#}" 0
+    then
+        usage
+    fi
+
+    local nodename=""
+    local namespace="kube-system"
+    local podname="k8s-nodeshell"
+    local fullpodname
+
+    ## Parse command line arguments
+    while [ "${1:-""}" != "" ]
+    do
+        case "${1}"
+        in
+	        -h|--help)
+                usage
+            ;;
+
+            -n|--namespace)
+                namespace="${2:-""}"
+                shift
+            ;;
+            -s|--server)
+                nodename="${2:-""}"
+	            shift
+	        ;;
+            -p|--podname)
+                podname="${2:-""}"
+                shift
+	        ;;
+        esac
+
+        shift || true
+    done
+
+    if var::is_empty "${nodename}" \
+    || var::is_empty "${namespace}" \
+    || var::is_empty "${podname}"
+    then
+        usage
+    fi
+
+    depends::check kubectl || return 1
+
+
+    log::info "Forming full pod name"
+
+    if ! fullpodname="$( k8s::podname "${podname}" )"
+    then
+        proc::exit_error "Failed to form full name for ${podname}"
+    fi
+
+
+    log::info "Deleting ${fullpodname} if existent"
+
+    if ! k8s::delete_object "${fullpodname}" pod "${namespace}"
+    then
+        proc::exit_error "Failed to delete pod ${fullpodname}"
+    fi
+
+
+    log::info "Creating a new pod manifest"
+
+    if ! manifest="$( create_manifest "${nodename}" "${fullpodname}" )"
+    then
+        proc::exit_error "Failed to create manifest for ${fullpodname}"
+    fi
+
+
+    log::info "Applying manifest"
+
+    if ! chronic kubectl -n "${namespace}" apply -f "${manifest}"
+    then
+        proc::exit_error "Applying manifest ${manifest} failed!"
+    else
+        log::info "Removing manifest file ${manifest}"
+        rm "${manifest}"
+    fi
+
+
+    log::info "Waiting for pod ${fullpodname} to become ready"
+
+    if ! k8s::pod_wait_until_ready "${fullpodname}" "${namespace}"
+    then
+        proc::exit_error "Pod ${fullpodname} did not become ready!"
+    fi
+
+    log::info "Pod ${fullpodname} ready! Spawning shell"
+
+    kubectl exec \
+        -n "${namespace}" \
+        -t -i "${fullpodname}" -- chroot /mnt bash || true
+
+    log::info "Deleting pod ${fullpodname}"
+
+    k8s::delete_object "${fullpodname}" pod "${namespace}" || true
+}
+
+
+main "$@"

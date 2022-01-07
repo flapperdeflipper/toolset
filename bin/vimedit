@@ -1,0 +1,96 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Open standard output in vim
+
+    This script uses the standard input from a one-liner and opens those either
+    as a file or as content in vim. It can be used for easy and quickly editting
+    multiple files or put all output of a one liner in vim.
+
+    ${TOOLSET_SCRIPT_NAME} [-f|-c]
+
+   Arguments:
+    -f, --file      - Read filenames from stdin and open in vim
+    -c, --content   - Read the content from stdin and open in vim
+
+    -h, --help      - Show this menu
+
+    Example:
+      \$( which somescript ) | ${TOOLSET_SCRIPT_NAME} -f
+      ps -ef | ${TOOLSET_SCRIPT_NAME} -c
+
+EOF
+
+    exit 0
+}
+
+
+function existsfilter {
+    local -a files
+    while read -r line
+    do
+        if fs::is_file "${line}"
+        then
+            files+=("${line}")
+        fi
+    done < /dev/stdin
+
+    printf "${files[*]}"
+}
+
+
+function main {
+    var::eq "${#}" 0 && usage
+
+    declare -i read_content=0
+    declare -i read_filename=0
+
+    ## Parse command line arguments
+    while [[ "${1:-""}" != "" ]]
+    do
+        case "${1}" in
+            -h|--help)
+                usage
+                ;;
+            -c|--content)
+                read_content=1
+                shift
+            ;;
+            -f|--file)
+                read_filename=1
+                shift
+            ;;
+        esac
+
+        shift || true
+    done
+
+    if ! var::eq "$( var::sum "${read_filename}" "${read_content}" )" 1
+    then
+        log::warning "Use either --content or --file"
+        usage
+    fi
+
+    if ! var::is_stdin
+    then
+        log::warning "No input from stdin"
+        usage
+    fi
+
+    depends::check_list::silent vim vipe || return 1
+
+    if var::eq "${read_content}" 1
+    then
+        cat < /dev/stdin | vim -
+    else
+        cat < /dev/stdin | existsfilter | xargs --no-run-if-empty -o vim
+    fi
+
+}
+
+main "${@}"

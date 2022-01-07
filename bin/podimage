@@ -1,0 +1,50 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Retrieve the container image
+
+    This script can be used to find the container image that are used for pods
+    matching a given regular expression. It can provide overview
+    about specific pods and their current container image.
+
+    ${TOOLSET_SCRIPT_NAME} <regex>
+
+   Arguments:
+    -h, --help   - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} kube
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    if var::lt "${#}" 1 \
+    || var::equals "${1:-""}" "-h" \
+    || var::equals "${1:-""}" "--help"
+    then
+        usage
+    fi
+
+    declare -r regex="${1:-""}"
+
+    podid "${regex}" --namespace \
+    	| while read -r namespace pod
+    do
+        echo -ne "namespace: ${namespace} pod: ${pod}\n  --> ";
+        kubectl describe -n "${namespace}" pod "${pod}" \
+    	    | grep 'Image:'
+        echo
+    done
+}
+
+
+main "${@}"

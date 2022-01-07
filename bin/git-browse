@@ -1,0 +1,82 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+function usage() {
+    cat <<EOF
+
+    Open main links of your current git repo in your browser
+
+    This script opens frequently used urls for multiple git providers in your
+    browser. It can be used to speed up navigation the web based functionality
+    of a corresponding local git repository.
+
+    Arguments:
+        gitlab)
+                --pipe|-ci         - Show pipelines
+                --ci-visual|-v     - Show ci visualization
+                --ci-lint|-cl      - Show ci linter
+                --ci-merged|-cm    - Show ci merged yaml
+                --ci|--config|-c   - Show ci settings
+                --mr|--pr|-p       - Show merge requests
+                --cr|--registry|-r - Show container registry
+                --issues|-i        - Show issues
+
+         github)
+                --pipe|-a          - Show actions
+                --ci|--config|-c   - Show actions settings
+                --mr|-m|--pr|-p    - Show pull requests
+                --cr|--registry|-r - Show packages
+                --issues|-i        - Show issues
+
+         bitbucket)
+                --pipe|-a          - Show pipelines
+                --ci|--config|-c   - Show pipeline settings
+                --mr|--pr|-p       - Show pull requests
+                --issues|-i        - Show issues
+
+EOF
+    exit 1
+}
+
+
+function main {
+
+    local uri
+    local baselink
+
+    if var::gt "${#}" 1 \
+    || var::equals "${1:-""}" "-h" \
+    || var::equals "${1:-""}" "--help"
+    then
+        usage
+    fi
+
+    local input="${1:-""}"
+
+    local baselink
+          baselink="$( git::baseurl )"
+
+    if var::matches "${baselink}" "github"
+    then
+          uri="$( git::provider_uri "github" "${input}" )"
+
+    elif var::matches "${baselink}" "gitlab"
+    then
+          uri="$( git::provider_uri "gitlab" "${input}" )"
+
+    elif var::matches "${baselink}" "bitbucket"
+    then
+          uri="$( git::provider_uri "bitbucket" "${input}" )"
+
+    else
+          proc::die "Failed to determine git provider"
+    fi
+
+    /usr/bin/open "${baselink}/${uri}"
+
+}
+
+
+main "${@}"

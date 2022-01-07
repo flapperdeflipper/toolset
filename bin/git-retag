@@ -1,0 +1,58 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Remove an existing git tag and overwrite it with a new one
+
+    This script can overwrite an already created git tag.
+    It removes the old one, creates a new one and does a forced push for only
+    tags to ensure the new tag is set live.
+
+    ${TOOLSET_SCRIPT_NAME} <tag>
+
+   Arguments:
+    -h, --help  - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} v0.0.1
+
+EOF
+
+    exit 0
+}
+
+function main {
+    if ! var::eq "${#}" 1 \
+      || var::equals "${1:-""}" "-h" \
+      || var::equals "${1:-""}" "--help"
+    then
+        usage
+    fi
+
+    local -r input="${1:-""}"
+
+    var::is_empty "${input}" && usage
+
+    if git::is_dirty
+    then
+      proc::die 'This repo is dirty. Please commit your open changes first!'
+    fi
+
+    if ! git::is_tag "${input}"
+    then
+        proc::die "Tag ${input} not found!"
+    fi
+
+    log::info "Retagging to ${input}"
+
+    git tag -d "${input}"
+    git tag "${input}"
+    git push --tags -f
+}
+
+main "${@}"

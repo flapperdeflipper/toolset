@@ -1,0 +1,70 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Cordon and drain and a k8s node
+
+    ${TOOLSET_SCRIPT_NAME} <node>
+
+   Arguments:
+    -h, --help  - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} 10-20-27-3.eu-central-1.compute.internal
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    if var::lt "${#}" 1 \
+    || var::equals "${1:-""}" "-h" \
+    || var::equals "${1:-""}" "--help"
+    then
+        usage
+    fi
+
+    local node="${1:-""}"
+
+    if ! var::matches "${node}" compute.internal
+    then
+        proc::die "Node does not match compute.internal"
+    fi
+
+    log::info "Cordoning and draining ${node}"
+
+    if ! interact::prompt_bool
+    then
+        proc::exit_warning "Action canceled!"
+    fi
+
+    log::info "Cordoning node ${node}"
+
+    if k8s::cordon "${node}"
+    then
+        log::info "Cordon for ${node} finished... [OK]"
+    else
+        proc::die "Failed to cordon node ${node}! [FAIL]"
+    fi
+
+    log::info "Draining node ${node}"
+
+    if k8s::drain "${node}"
+    then
+        proc::exit_ok "Drain for node ${node} finished... [OK]"
+    else
+        proc::die "Failed to drain node ${node}"
+    fi
+
+}
+
+
+main "${@}"

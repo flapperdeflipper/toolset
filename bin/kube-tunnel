@@ -1,0 +1,165 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Start a port-forward tunnel to a k8s pod or service
+
+    This script creates a port forward to a k8s pod or service from your local
+    machine to a given port to provide network access to a pod or service in a
+    k8s cluster.
+
+    ${TOOLSET_SCRIPT_NAME} -l <local port> -r <remote port> -n <namespace> [-p <pod>|-s <service>]
+
+    Arguments:
+    -n, --namespace     The namespace to search for pods in
+    -l, --local-port    The local port to listen on
+    -r, --remote-port   The remote port to connect to
+
+    Optional:
+    -p, --pod         The pod to tunnel to
+    -s, --service     The service to tunnel to
+    -d, --deployment  The deployment to tunnel to
+    -ss, --statefulset The statefulset to tunnel to
+
+    Example:
+    ${TOOLSET_SCRIPT_NAME} -n kube-system --pod coredns-f9fd979d6-4ngjr -l 1053 -r 53
+
+    Note: You cannot use both --service and --pod at the same time!
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    if [ "${#}" -eq 0 ] ; then
+        usage
+    fi
+
+    local local_port=""
+    local remote_port=""
+    local namespace=default
+
+    local object=""
+    local object_type=""
+
+    ## Parse command line arguments
+    while [ "${1:-""}" != "" ]
+    do
+        case "$1"
+        in
+           -h|--help)
+                usage
+            ;;
+            -n|--namespace)
+                namespace="${2}"
+                shift
+            ;;
+            -l|--local-port)
+                local_port="${2}"
+                shift
+            ;;
+            -r|--remote-port)
+                remote_port="${2}"
+                shift
+            ;;
+            -s|--service)
+                object="${2}"
+                object_type=service
+                shift
+            ;;
+            -p|--pod)
+                object="${2}"
+                object_type=pod
+                shift
+            ;;
+            -ss|--statefulset)
+                object="${2}"
+                object_type=statefulset
+                shift
+            ;;
+            -d|--deployment)
+                object="${2}"
+                object_type=deployment
+                shift
+            ;;
+            *)
+                proc::die "Unknown input: ${1} ${2}"
+            ;;
+        esac
+
+        shift || true
+    done
+
+    ## If arguments missing: show usage
+    if var::is_empty "${local_port}" \
+        || var::is_empty "${remote_port}" \
+        || var::is_empty "${namespace}" \
+        || var::is_empty "${object}" \
+        || var::is_empty "${object_type}"
+    then
+        usage
+    fi
+
+    local connect_to
+
+    if var::equals "${object_type}" pod
+    then
+        k8s::is_pod "${object}" "${namespace}" \
+            || proc::die "Pod ${object} not found in ns ${namespace}"
+
+        connect_to="pod/${object}"
+
+
+    elif var::equals "${object_type}" service
+    then
+        k8s::is_service "${object}" "${namespace}" \
+            || proc::die "service ${object} not found in ns ${namespace}"
+
+        connect_to="service/${object}"
+
+
+    elif var::equals "${object_type}" deployment
+    then
+        k8s::is_deployment "${object}" "${namespace}" \
+            || proc::die "deployment ${object} not found in ns ${namespace}"
+
+        connect_to="deployment/${object}"
+
+
+    elif var::equals "${object_type}" statefulset
+    then
+        k8s::is_statefulset "${object}" "${namespace}" \
+            || proc::die "statefulset ${object} not found in ns ${namespace}"
+
+        connect_to="statefulset/${object}"
+    fi
+
+    log::info "Setting up tunnel to ${local_port}:${connect_to}:${remote_port}"
+
+    if var::equals "${local_port}" 80 \
+    || var::equals "${local_port}" 8080 \
+    || var::equals "${local_port}" 443 \
+    || var::equals "${local_port}" 8443
+    then
+        log::info "Connect to: localhost:${local_port}"
+    fi
+
+    if ! kubectl port-forward \
+        -n "${namespace}"  \
+        "${connect_to}" \
+        "${local_port}:${remote_port}"
+    then
+        proc::exit_error "Failed to setup port forward to ${local_port}:${connect_to}:${remote_port}"
+    fi
+
+    proc::exit_ok "Exit"
+}
+
+main "${@}"

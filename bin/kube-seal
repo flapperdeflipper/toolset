@@ -1,0 +1,148 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Seal a secret from stdin or a filename into a sealed secret
+
+    This script writes a secret from a file or input to a sealed secret file or stdout
+    It is a wrapper for easily using the kubeseal utility provided by the sealed
+    secret controller.
+
+    ${TOOLSET_SCRIPT_NAME} -n <namespace> -i <filename> -i
+
+    Arguments:
+      -n, --namespace        - The namespace for which we should seal the secret
+
+    Optional:
+      -f, --filename         - The filename of the secret we are sealing (Default: /dev/stdin)
+      -o, --output           - The filename of the sealedsecret (Default: /dev/stdout)
+
+      --controller-name      - The name of the controller (Default: sealed-secrets)
+      --controller-namespace - The namespace of the controller (Default: kube-system)
+
+    Confgure the controller-name and controller-namespace using env vars:
+
+        export KUBESEAL_CONTROLLER_NAME=sealed-secrets
+        export KUBESEAL_CONTROLLER_NAMESPACE=kube-system
+
+    Example:
+      cat some.yaml | ${TOOLSET_SCRIPT_NAME} -n default -o default/some-secret.yaml
+      ${TOOLSET_SCRIPT_NAME} -n default -f some.yaml -o default/some-secret.yaml
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    local name=""
+    local namespace=""
+    local filename=""
+
+    local output=/dev/stdout
+    local controller_name="${KUBESEAL_CONTROLLER_NAME:-sealed-secrets}"
+    local controller_namespace="${KUBESEAL_CONTROLLER_NAMESPACE:-kube-system}"
+
+    var::le "${#}" 1 && usage
+
+    ## Parse command line arguments
+    while [ "${1:-""}" != "" ]
+    do
+       case "${1}" in
+           -h|--help)
+               usage
+           ;;
+
+           -i|--name)
+               name="${2:-""}"
+               shift
+           ;;
+
+           -n|--namespace)
+               namespace="${2:-""}"
+               shift
+           ;;
+
+           -f|--filename)
+               filename="${2:-""}"
+               shift
+           ;;
+
+           -o|--output)
+               output="${2:-""}"
+               shift
+           ;;
+
+           --controller-name)
+               controller_name="${2:-"${controller_name}"}"
+               shift
+           ;;
+
+           --controller-namespace)
+               controller_namespace="${2:-"${controller_namespace}"}"
+               shift
+           ;;
+
+           *)
+               shift
+           ;;
+       esac
+
+       shift || true
+
+    done
+
+    ## Redirect stdin to file
+    if [ -z "${filename}" ]
+    then
+        log::info "Redirecting stdin to a tempfile"
+
+        filename="$( mktemp )"
+        cat /dev/stdin > "${filename}"
+
+        trap 'rm -f "${filename}"' EXIT
+    fi
+
+    ## Bail out if filename does not exist
+    if ! fs::is_file "${filename}"
+    then
+        log::error "${FUNCNAME[0]}: Filename ${filename} not found"
+        return 1
+    fi
+
+    ## Set arguments
+    local arguments=(
+        "--controller-name ${controller_name}"
+        "--controller-namespace ${controller_namespace}"
+        "--format yaml"
+    )
+
+    ## Form seal command
+    var::has_value "${name}"      && arguments+=("--name ${name}")
+    var::has_value "${namespace}" && arguments+=("--namespace ${namespace}")
+
+    ## Seal the secret
+    log::info  "Sealing secret ${filename} to ${output}"
+
+    if ! k8s::kubeseal ${arguments[*]} < "${filename}" > "${output}"
+    then
+        log::error "${FUNCNAME[0]}: Failed to seal ${filename} to ${output}"
+        return 1
+    fi
+
+    if ! var::equals "${output}" "/dev/stdout"
+    then
+        log::info "Created sealed secret in ${output}"
+    fi
+
+    log::info "K8s::secret::seal done"
+}
+
+
+main "${@}"

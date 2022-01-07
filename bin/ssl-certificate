@@ -1,0 +1,160 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Create certificates from an intermediate chain
+
+    This script creates an intermediate ssl certificate when setting up your own
+    ssl certificate chain. It does not use the (offline) root ca certificate
+    that can be created using the ssl-rootca script but instead uses the
+    intermediate certificate that can be created using ssl-intermediate
+    to create the utility certificates on a machine.
+
+    ${TOOLSET_SCRIPT_NAME} -b <basedir> -n <name>
+
+    Arguments:
+      -n, --name    - The name of the cert
+      -b, --basedir - The basedir from where to create certs
+      -t, --type    - The type of cert (Choose: client, user, server)
+      -s, --subject - The subject
+
+    Use subject:
+      --subject "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com"
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} --basedir /certs/intermediate -n example.com -n example.nl -n example.net
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    local name=""
+    local subject=""
+    local cert_type=""
+    local extension=""
+    local dir=./certs
+
+    ## check for input
+    var::lt "${#}" 2 && usage
+
+    ## check for dependencies
+    depends::check_list::silent openssl pwgen chronic || return 1
+
+    ## Parse command line arguments
+    while [ "${1:-""}" != "" ]
+    do
+       case "${1}" in
+           -h|--help)
+               usage
+           ;;
+
+           -n|--name)
+               name="${2:-""}"
+               shift
+           ;;
+           -t|--type)
+               cert_type="${2:-""}"
+               shift
+           ;;
+
+           -b|--basedir)
+               dir="${2:-"${dir}"}"
+               shift
+           ;;
+
+           -s|--subject)
+               subject="${2:-""}"
+               shift
+           ;;
+
+           *)
+               usage
+           ;;
+
+       esac
+
+       shift || true
+    done
+
+    var::is_empty "${name}" && usage
+    var::is_empty "${subject}" && usage
+
+    local -r basedir="${dir}/intermediate"
+
+    if ! fs::is_dir "${basedir}"
+    then
+        log::error "${FUNCNAME[0]}: Directory ${basedir} not found!"
+        return 1
+    fi
+
+    cd "${basedir}" || return 1
+
+    case "${cert_type}" in
+        user)   extension="user_ext" ;;
+        server) extension="server_ext" ;;
+        client) extension="client_ext" ;;
+        *)      usage ;;
+    esac
+
+    log::info "Retrieving intermediate password"
+
+    local password
+    if ! password="$( ssl::generate::read_password_file --basedir "${basedir}" )"
+    then
+        log::error "${FUNCNAME[0]}: Failed to retrieve password from file"
+        return 1
+    fi
+
+    ## Set environment vars
+    export OPENSSL_CONF="${basedir}/openssl.cnf"
+    export CA_HOME="${basedir}"
+
+    log::info "Creating private key"
+
+    ssl::generate::create_private_key \
+        --basedir "${basedir}" \
+        --password "${password}" \
+        --type "${name}" \
+        --curve prime256v1 \
+        || return 1
+
+    log::info "Creating cert request"
+
+    ssl::generate::create_csr \
+        --basedir "${basedir}" \
+        --password "${password}" \
+        --type "${name}" \
+        --outfile "${basedir}/certreqs/${name}.csr" \
+        --extra "-subj ${subject}" \
+        || return 1
+
+
+    log::info "Creating serial file"
+
+    ssl::generate::create_random_serial \
+        --basedir "${basedir}" \
+        --type "intermediate" \
+        || return 1
+
+
+    log::info "Create ${cert_type} certificate"
+
+    ssl::generate::sign_csr \
+        --basedir "${basedir}" \
+        --password "${password}" \
+        --type "${name}" \
+        --extension "${extension}" || return 1
+
+    log::info "Created ${cert_type} key pair in ${basedir}/certs"
+}
+
+
+main "${@}"

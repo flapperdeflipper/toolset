@@ -1,0 +1,47 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Retrieve information about a ssl certificate
+
+    This script shows information for a local ssl certificate file
+    It can both read local certificate files as well retrieve the certificate
+    from a remote server on a specified port by setting up a connection.
+
+    ${TOOLSET_SCRIPT_NAME} <host|file> [<port> <servername>]
+
+   Arguments:
+    -h, --help  - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} 10.0.0.1 443 example.com
+      ${TOOLSET_SCRIPT_NAME} ./cert.pem
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    if var::lt "${#}" 1 \
+    || var::gt "${#}" 3 \
+    || var::equals "${1:-""}" "-h" \
+    || var::equals "${1:-""}" "--help"
+    then
+        usage
+    fi
+
+    local input="${1:-""}"
+    local -i port="${2:-443}"
+    local servername="${3:-"${input}"}"
+
+    ssl::info "${input}" "${port}" "${servername}"
+}
+
+
+main "${@}"

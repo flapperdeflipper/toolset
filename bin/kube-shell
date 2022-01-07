@@ -1,0 +1,96 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Start a shell or run a command in a k8s pod
+
+    ${TOOLSET_SCRIPT_NAME} -r <regex> -n <namespace> -c <command>
+
+    Arguments:
+    -r, --regex       The regex to match (uses the first pod in the resultset)
+    -n, --namespace   The namespace to search for pods in
+    -c, --command     The command to run on the pod
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} -r somepod -n kube-system -c bash
+
+EOF
+
+    exit 0
+}
+
+function main {
+    if [ "${#}" -eq 0 ] ; then
+        usage
+    fi
+
+    local cmd=""
+    local regex=""
+    local namespace=default
+
+    ## Parse command line arguments
+    while [ "${1:-""}" != "" ]
+    do
+        case "$1"
+        in
+           -h|--help)
+                usage
+            ;;
+            -n|--namespace)
+                namespace="${2:-""}"
+                shift
+            ;;
+            -r|--regex)
+                regex="${2:-""}"
+                shift
+            ;;
+            -c|--command)
+                cmd="${2:-""}"
+                shift
+            ;;
+            *)
+                proc::die "Unknown input: ${1} ${2}"
+            ;;
+        esac
+
+        shift || true
+    done
+
+    var::is_empty "${namespace}" && usage
+    var::is_empty "${regex}"     && regex="."
+    var::is_empty "${cmd}"       && cmd="/bin/sh"
+
+    log::info "Retrieving pod matching ${regex}"
+
+    if ! pod="$( \
+        k8s::grep \
+            -n "${namespace}" \
+            -r "${regex}" 2>/dev/null \
+        | tail -n 1 \
+        | awk '{print $1}' \
+    )"
+    then
+        proc::exit_error "Failed to retrieve pod"
+    fi
+
+    if [ -z "${pod}" ]
+    then
+        proc::exit_warning "No pods found in namespace ${namespace} matching regex \"${regex}\""
+    fi
+
+    log::info "Running command ${cmd} on ${pod}"
+
+    if ! kubectl -n "${namespace}" exec -ti "${pod}" -- ${cmd}
+    then
+        proc::exit_error "Failed to run command ${cmd} on pod ${pod}"
+    fi
+
+    proc::exit_ok "Exit"
+}
+
+main "${@}"

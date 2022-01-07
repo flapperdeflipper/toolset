@@ -1,0 +1,46 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Grep for k8s objects matching a regex
+
+    This script can retrieve k8s objects in a cluster that match a given regex.
+    It can be used to provide an overview of existing objects.
+
+    ${TOOLSET_SCRIPT_NAME} -r <regex> -i <object> [<options>]
+
+   Arguments:
+    -i, --object - Give k8s object
+                   (Default: pods)
+
+    -r, --regex  - Give regex
+
+    -w, --wide   - Print wide output
+    -h, --help   - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} -r kube -i deploy -n default -A
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    if var::lt "${#}" 2 \
+    || var::equals "${1:-""}" "-h" \
+    || var::equals "${1:-""}" "--help"
+    then
+        usage
+    fi
+
+    k8s::grep "${@}"
+}
+
+main "${@}"

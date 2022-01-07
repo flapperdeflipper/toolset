@@ -1,0 +1,189 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+function create_manifest {
+    local authdir
+
+    local nodename="${2}"
+    local pubkeycontent="${4}"
+    local authfile="${6}"
+
+    authdir="$( dirname "${authfile}" )"
+    podname="$( k8s::podname "k8s-key-installer" )"
+
+    cat <<EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ${podname}
+  labels:
+    app: k8s-key-installer
+spec:
+  containers:
+  - image: alpine
+    name: k8s-key-installer
+    command:
+    - /bin/sh
+    - -xc
+    - echo "${pubkeycontent}" >> ${authfile} && chmod 0600 ${authfile}
+    volumeMounts:
+    - mountPath: ${authdir}
+      name: ssh
+  nodeSelector:
+    kubernetes.io/hostname: ${nodename}
+  restartPolicy: Never
+  tolerations:
+  - operator: "Exists"
+  volumes:
+  - hostPath:
+      path: ${authdir}
+    name: ssh
+EOF
+}
+
+
+##
+## Print help output
+##
+
+function usage() {
+    cat <<EOF
+
+    Inject SSH key in the authorized_keys on all kubernetes nodes
+
+    This script mounts the authorized_keys file of a kubernetes node
+    and adds an SSH key of choice to ensure SSH access on a node.
+
+    ${TOOLSET_SCRIPT_NAME} -n <namespace> -a <pubkey> -a /root/.ssh/authorized_keys
+
+    Arguments:
+      --pubkey, -p    - The ssh public keyfile to inject
+
+    Optional:
+      --namespace, -n - The namespace in which to start a container
+                        (Default: kube-system).
+      --authfile, -a  - The authorized_keys file location
+                        (Default: /root/.ssh/authorized_keys)
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} -n default -a ~/.ssh/id_rsa
+
+EOF
+
+    exit 0
+}
+
+
+
+function main {
+    if var::eq "${#}" 0
+    then
+        usage
+    fi
+
+    pubkey=""
+    namespace=kube-system
+    authfile=/root/.ssh/authorized_keys
+
+    ## Parse command line arguments
+    while [ "${1:-""}" != "" ]
+    do
+        case "$1"
+        in
+	        -h|--help)
+                usage 0
+            ;;
+
+            -n|--namespace)
+                namespace="${2:-""}"
+                shift
+            ;;
+            -p|--pubkey)
+                pubkey="${2:-""}"
+	            shift
+	        ;;
+            -a|--authfile)
+                authfile="${2:-""}"
+                shift
+	        ;;
+        esac
+
+        shift || true
+    done
+
+    if var::is_empty "${pubkey}" \
+    || var::is_empty "${namespace}" \
+    || var::is_empty "${authfile}"
+    then
+        usage
+    fi
+
+    depends::check kubectl || exit 0
+
+    if ! string::endswith ".pub" "${pubkey}"
+    then
+        proc::exit_error "Public key not ending with .pub! Using a privkey?"
+    fi
+
+    if ! fs::is_file "${pubkey}"
+    then
+        proc::exit_error "Public keyfile ${pubkey} not found!"
+    fi
+
+    local pubkeycontent
+          pubkeycontent="$( cat "${pubkey}" )"
+
+    log::info "Inject SSH-key '${pubkey}' on all nodes."
+
+    if ! interact::prompt_bool
+    then
+        proc::exit_warning "Action canceled!"
+    fi
+
+    log::info "Deleting existing app=k8s-key-installer pods if present"
+    kubectl delete po -l 'app=k8s-key-installer' >/dev/null 2>&1 || true
+
+    local IFS=$'\n'
+
+    for node in $( k8s::nodes )
+    do
+        log::info "${node}: running k8s-key-installer"
+
+        if ! create_manifest \
+            --node "${node}" \
+            --pubkeycontent "${pubkeycontent}" \
+            --authfile "${authfile}" \
+            | kubectl apply -f- > /dev/null 2>&1
+        then
+            proc::exit_error "Failed to create manifest for node: ${node}"
+        fi
+
+        log::info "${node}: Waiting for pod to be started"
+
+        sleep 5
+
+        while kubectl get po -l app=k8s-key-installer --no-headers \
+                | awk '{ print $3 }' \
+                | tail -n1 \
+                | grep -qv Completed
+        do
+            log::info "Waiting on pod to complete for ${node}"
+            sleep 5
+        done
+
+        log::info "SSH pubkey injection done on ${node}"
+
+        log::info "Deleting pod from ${node}"
+        if ! kubectl delete po -l app=k8s-key-installer | log::stdin OUTPUT
+        then
+            log::warning "Failed to delete pod from ${node}"
+        fi
+    done
+}
+
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi

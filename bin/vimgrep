@@ -1,0 +1,65 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Open all files in vim containing content matching a regex
+
+    This script does a recursive grep in a directory and opens all files that
+    are matching a given regular expression.
+
+    ${TOOLSET_SCRIPT_NAME} <regex> [-h|--help]
+
+    Arguments:
+      -h, --help  - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} kube
+
+EOF
+
+    exit 0
+}
+
+
+
+function main {
+    if var::lt "${#}" 1 \
+    || var::equals "${1:-""}" "-h" \
+    || var::equals "${1:-""}" "--help"
+    then
+        usage
+    fi
+
+    declare -r regex="${1:-""}"
+    declare -r arguments="${2:--R -E}"
+    declare -r directory="${3:-.}"
+    declare files
+
+    declare -a cmd=(
+        "${arguments}"
+        "${regex}"
+        "${directory}"
+    )
+
+    # shellcheck disable=SC2046,SC2068
+    files=$( \
+        grep -s ${cmd[@]} \
+        | cut -d: -f1  \
+        | sort -u \
+        | xargs \
+    ) || true
+
+    if var::has_value "${files}"
+    then
+        vim ${files}
+    else
+        log::warning "No files found matching ${regex}"
+    fi
+}
+
+main "${@}"

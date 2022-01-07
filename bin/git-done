@@ -1,0 +1,54 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Show a list of what was done the day before
+
+    ${TOOLSET_SCRIPT_NAME}
+
+   Arguments:
+    -h, --help  - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME}
+
+EOF
+
+    exit 0
+}
+
+function main {
+    if ! var::eq "${#}" 0 \
+      || var::equals "${1:-""}" "-h" \
+      || var::equals "${1:-""}" "--help"
+    then
+        usage
+    fi
+
+    local since
+
+    if var::equals "Mon" "$(date +%a)"
+    then
+        since="last friday"
+    else
+        since="yesterday"
+    fi
+
+    local -r format='%C(cyan) %ad %C(yellow)%h %Creset %s             %Cgreen%d'
+
+    git log \
+        --reverse \
+        --branches \
+        --since="${since}" \
+        --author="$( git config --get user.email )" \
+        --format=format:"${format}" \
+        --date=local
+
+}
+
+main "${@}"

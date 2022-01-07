@@ -1,0 +1,49 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Grep k8s pods matching a regex
+
+    This script can be used to find pods on a k8s cluster that are
+    matching a given regex.
+
+    ${TOOLSET_SCRIPT_NAME} <regex> [<options>]
+
+   Arguments:
+    -h, --help  - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} -r kube -n default
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    if var::lt "${#}" 1 \
+    || var::equals "${1:-""}" "-h" \
+    || var::equals "${1:-""}" "--help"
+    then
+        usage
+    fi
+
+    # shellcheck disable=SC2086,SC2001
+    local -r regex="${1}"; shift
+    local arguments="${*}"
+
+    if var::is_empty "${arguments}"
+    then
+        arguments=" -A -o wide"
+    fi
+
+    k8s::grep --object pod --regex "${regex}" ${arguments}
+}
+
+main "${@}"
