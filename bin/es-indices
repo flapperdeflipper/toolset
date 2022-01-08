@@ -38,8 +38,7 @@ function main {
     local output
           output="$( es-cmd GET /_cat/indices?v )"
 
-    if [[ "${1:-""}" == "-a" ]] \
-    || [[ "${1:-""}" == "--all" ]]
+    if interact::in_args "-a --all" "${@}"
     then
         echo "${output}"
         exit 0

@@ -37,10 +37,8 @@ function main {
     fi
 
     declare -r regex="${1:-""}"; shift
-    declare arguments="${*}"
 
-    if var::matches "${arguments}" "-ns" \
-    || var::matches "${arguments}" "--namespace"
+    if interact::in_args "-ns --namespace" "${@}"
     then
         awkline='{ print $1 " " $2 }'
     else

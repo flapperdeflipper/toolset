@@ -28,7 +28,6 @@ EOF
 }
 
 
-
 function main {
     if var::lt "${#}" 1
     then
@@ -68,7 +67,7 @@ function main {
 
     if ! aws::ses::whitelist_domain "${domain}" "${region}"
     then
-       exit::error "Failed to setup SES for domain repo ${domain}"
+        exit::error "Failed to setup SES for domain repo ${domain}"
     fi
 }
 

@@ -32,9 +32,9 @@ function main {
         usage
     fi
 
-    if ! depends::check_list::silent fzf find
+    if ! depends::check_list fzf find
     then
-        exit::error "This tool depends on fzf"
+        exit::error "This tool depends on fzf and find"
     fi
 
     exec find "${HOME}/bin/" "${HOME}/.toolset/bin" \

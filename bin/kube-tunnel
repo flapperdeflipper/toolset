@@ -99,10 +99,10 @@ function main {
 
     ## If arguments missing: show usage
     if var::is_empty "${local_port}" \
-        || var::is_empty "${remote_port}" \
-        || var::is_empty "${namespace}" \
-        || var::is_empty "${object}" \
-        || var::is_empty "${object_type}"
+    || var::is_empty "${remote_port}" \
+    || var::is_empty "${namespace}" \
+    || var::is_empty "${object}" \
+    || var::is_empty "${object_type}"
     then
         usage
     fi

@@ -41,7 +41,7 @@ function main {
     var::lt "${#}" 2 && usage
 
     ## check for dependencies
-    depends::check_list::silent openssl pwgen chronic || return 1
+    depends::check_list openssl pwgen chronic || return 1
 
     ## Parse command line arguments
     while [ "${1:-""}" != "" ]
@@ -84,7 +84,8 @@ function main {
     fi
 
     ## Create basedir
-    mkdir -p "${basedir}" && cd "${basedir}"
+    mkdir -p "${basedir}"
+    cd "${basedir}" || return 1
     cp "${sslconfig}" "${basedir}/openssl.cnf"
 
     ## Create password for root ca if not given

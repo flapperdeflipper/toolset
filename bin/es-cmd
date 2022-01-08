@@ -60,7 +60,8 @@ function main {
         log::info "${data}"
     fi
 
-    if [[ "${method}" == "TRY" ]] || [[ "${method}" == "try" ]]
+    if [[ "${method}" == "TRY" ]] \
+    || [[ "${method}" == "try" ]]
     then
         exit::info "${cmd[*]}"
     fi

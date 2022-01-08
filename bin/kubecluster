@@ -83,8 +83,7 @@ function main {
         usage
     fi
 
-    if var::equals "${1:-""}" "--info" \
-    || var::equals "${1:-""}" "-i"
+    if interact::in_args "--info -i" "${@}"
     then
         exec kubectl --help
     fi

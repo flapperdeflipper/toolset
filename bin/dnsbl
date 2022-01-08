@@ -1,5 +1,6 @@
-#!/usr/bin/env bash
+#!/usr/bin/env toolset
 # vi: ft=bash
+# shellcheck shell=bash
 
 ####################################################################
 # bl - BLACKLIST CHECK UNIX/LINUX UTILITY                          #
@@ -36,15 +37,13 @@ EOF
 #### main ####
 main() {
     if [[ "${#}" -ne 1 ]] \
-    || [[ "${1:-""}" == "-h" ]] \
-    || [[ "${1:-""}" == "--help" ]]
+    || interact::usage "${@}"
     then
         usage
     fi
 
-  fqdn=$(echo $1 | grep -P "(?=^.{5,254}$)(^(?:(?!\d+\.)[a-za-z0-9_\-]{1,63}\.?)+(?:[a-za-z]{2,})$)")
-
-  if [[ $fqdn ]] ; then
+  if net::is_fqdn "${1}"
+  then
 
     echo "You entered a domain: $1"
 
@@ -52,12 +51,12 @@ main() {
 
     reverseit $domain "IP not valid or domain could not be resolved."
   else
-
     echo "You entered an IP: $1"
+    echo
     reverseit $1 "IP not valid."
   fi
 
-  loopthroughblacklists $1
+  loopthroughblacklists "$1"
 }
 
 #### reverseit ####
@@ -75,15 +74,13 @@ reverseit() {
 
 #### loopthroughblacklists ####
 loopthroughblacklists() {
-
   reverse_dns=$(dig +short -x $1)
 
   echo $1 name ${reverse_dns:----}
 
   for bl in ${blacklists} ; do
 
-      printf "$( env tz=utc date "+%y-%m-%d_%h:%m:%s_%z" )"
-      printf "%-50s" " ${reverse}.${bl}."
+      printf "%-50s" "${reverse}.${bl}."
 
       listed="$(dig +short -t a ${reverse}.${bl}.)"
 
@@ -133,7 +130,6 @@ access.redhawk.org
 all.s5h.net
 all.spamrats.com
 aspews.ext.sorbs.net
-babl.rbl.webiron.net
 backscatter.spameatingmonkey.net
 b.barracudacentral.org
 bb.barracudacentral.org
@@ -246,4 +242,4 @@ zombie.dnsbl.sorbs.net
 "
 
 ### initiate script ###
-main $1
+main "${@}"

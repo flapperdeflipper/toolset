@@ -36,7 +36,7 @@ function main {
 
     local os
 
-    if array::contains "--linux" "${@:-""}"
+    if interact::in_args "--linux" "${@}"
     then
         os=linux
     else

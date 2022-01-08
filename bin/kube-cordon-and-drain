@@ -3,7 +3,6 @@
 # shellcheck shell=bash
 
 
-
 ## Print help output
 function usage {
     cat <<EOF

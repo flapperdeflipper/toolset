@@ -147,3 +147,30 @@ load "../../../bin/toolset"
     [ "$status" -eq 1 ]
 }
 
+##
+## interact::in_args
+##
+
+@test "Test that interact::in_args returns 0 if expected arg is given" {
+    local -a input=( --some --arguments -h )
+
+    run interact::in_args "--some" "${input[@]}"
+
+    [ "$status" -eq 0 ]
+
+    local -a input=( --some --arguments -h )
+
+    run interact::in_args "--arguments" "${input[@]}"
+
+    [ "$status" -eq 0 ]
+}
+
+
+@test "Test that interact::in_args returns 1 if expected arg is not given" {
+    local -a input=( --some --arguments )
+
+    run interact::in_args "--whatever" "${input[@]}"
+
+    [ "$status" -eq 1 ]
+}
+

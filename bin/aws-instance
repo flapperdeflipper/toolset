@@ -155,7 +155,7 @@ function main() {
 
     ## Exit if no tunnelports
     if var::eq "${tunnel}" 1 \
-        && ( var::is_empty "${tunnel_ports}" || ! string.contains ":" "${tunnel_ports}" )
+    && ( var::is_empty "${tunnel_ports}" || ! string.contains ":" "${tunnel_ports}" )
     then
         usage
     fi

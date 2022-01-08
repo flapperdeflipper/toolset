@@ -98,18 +98,40 @@ function interact::prompt_response {
 
 
 ##
+## Check if a specific argument is given
+##
+
+function interact::in_args {
+    local arguments="${1}";  shift
+    local input="${*}"
+
+    for argument in ${arguments};
+    do
+        if var::matches "${input}" "${argument}"
+        then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+
+##
 ## Check if -h or --help is given in arguments
 ##
 
 function interact::usage {
     local input="${*}"
 
-    if var::matches "${input}" "-h" \
-    || var::matches "${input}" "--help"
+    if interact::in_args "-h --help" "${input}"
     then
         return 0
     fi
 
     return 1
 }
+
+
+
 
