@@ -28,7 +28,8 @@ declare BASH_ARGV0="${1:-""}"
 
 
 ## Set the name of the script
-declare TOOLSET_SCRIPT_NAME="${1:-""}"
+declare TOOLSET_SCRIPT_PATH="${1:-""}"
+declare TOOLSET_SCRIPT_NAME="$( basename "${TOOLSET_SCRIPT_PATH:-""}" )"
 
 
 ## Shift the first argument (the scriptname itself, which we've set to $0)
@@ -52,7 +53,11 @@ source "${TOOLSET_LIBRARY_PATH}/core.sh"
 
 
 ## Export toolset variables
-export TOOLSET_VERSION TOOLSET_BIN_PATH TOOLSET_LIBRARY_PATH TOOLSET_SCRIPT_NAME
+export TOOLSET_VERSION
+export TOOLSET_BIN_PATH
+export TOOLSET_LIBRARY_PATH
+export TOOLSET_SCRIPT_NAME
+export TOOLSET_SCRIPT_PATH
 
 
 ## Import all shell libraries
@@ -78,11 +83,12 @@ import tests
 import debug
 
 
-## Import source script if executed using shebang
+## Import source script if executed as a script
 if [[ "${-}" != *i* ]] \
 && [[ -z "${BATS_TEST_FILENAME:-""}" ]] \
 && ! shopt -q login_shell
 then
     # shellcheck source=/dev/null
-    source "${TOOLSET_SCRIPT_NAME}"
+    source "${TOOLSET_SCRIPT_PATH}"
 fi
+
