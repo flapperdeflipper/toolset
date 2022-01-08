@@ -1,0 +1,77 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Create symlinks for frequently used GNU utils installed using homebrew.
+
+    This script can create symlinks for all GNU utils on a mac that are
+    installed using homebrew and as such are prefixed with G.
+    It reads ~/.gnulinks and create a non-prefixed symlink to the util in
+    /usr/local/bin for easy use of gnu utils without having to prefix them with
+    "G" in all your scripts.
+
+    ${TOOLSET_SCRIPT_NAME} [<action>]
+
+   Arguments:
+    -a, --apply - Create symlinks
+
+    -d, --dry   - Dry run
+    -h, --help  - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} --apply
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+
+    if var::lt "${#}" 1 \
+    || var::equals "${1:-""}" "-h" \
+    || var::equals "${1:-""}" "--help"
+    then
+        usage
+    fi
+
+    if ! fs::exists "${HOME}/.gnulinks"
+    then
+        proc::exit_error "Not found: ${HOME}/.gnulinks"
+    fi
+
+    logging::info "Updating symlinks for gnu utils"
+
+    local src dst
+
+    grep -vE '^#|^$' "${HOME}/.gnulinks" | while read -r util
+    do
+        src="$( brew --prefix )/bin/g${util}"
+        dst="/usr/local/bin/${util}"
+
+        if var::matches "${1:-""}" "-a" \
+        || var::matches "${1:-""}" "--apply"
+        then
+            logging::info "Symlinking ${src} to ${dst}"
+
+            if [[ -e "${src}" ]] && [[ ! -e "${dst}" ]]
+            then
+                ln -sf "${src}" "${dst}"
+            else
+                logging::info "Util /usr/local/bin/${util} exists.. Skipped"
+                continue
+            fi
+        else
+            logging::info "Dry-run: Would link ${src} to ${dst}"
+        fi
+    done
+
+    logging::info "All done!"
+}
+
+main "${@}"

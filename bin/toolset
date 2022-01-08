@@ -13,7 +13,7 @@
 ## Set error handling if not used in an interactive or login shell
 ## Then it should be done in the shell config itself
 if [[ "${-}" != *i* ]] \
-&& [[ -z "${BATS_TEST_FILENAME}" ]] \
+&& [[ -z "${BATS_TEST_FILENAME:-""}" ]] \
 && ! shopt -q login_shell
 then
     set -o errexit
@@ -80,7 +80,7 @@ import debug
 
 ## Import source script if executed using shebang
 if [[ "${-}" != *i* ]] \
-&& [[ -z "${BATS_TEST_FILENAME}" ]] \
+&& [[ -z "${BATS_TEST_FILENAME:-""}" ]] \
 && ! shopt -q login_shell
 then
     # shellcheck source=/dev/null

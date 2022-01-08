@@ -2,7 +2,6 @@
 # vi: ft=bash
 # shellcheck shell=bash
 
-
 ## Print help output
 function usage {
     cat <<EOF
