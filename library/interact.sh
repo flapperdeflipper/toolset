@@ -102,9 +102,6 @@ function interact::prompt_response {
 ##
 
 function interact::usage {
-    [[ "${#}" == 0 ]] \
-        && printf "%s: Missing arguments\n" "${FUNCNAME[0]}" && return 2
-
     local input="${*}"
 
     if var::matches "${input}" "-h" \

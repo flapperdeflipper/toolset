@@ -147,9 +147,3 @@ load "../../../bin/toolset"
     [ "$status" -eq 1 ]
 }
 
-@test "Test that interact::usage returns 2 if incorrect input" {
-    run interact::usage
-
-    [ "$status" -eq 2 ]
-}
-
