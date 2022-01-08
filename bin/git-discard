@@ -40,7 +40,7 @@ function main {
 
     log::info "Discarding all changes"
 
-    if git reset --hard
+    if git reset --hard && git clean --force
     then
         log::info '👍 All changes has been discarded!'
     fi

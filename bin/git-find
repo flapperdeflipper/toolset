@@ -35,7 +35,9 @@ function main {
 
     log::info "Listing all commits matching: ${pattern}"
 
-    local -r format='%C(yellow)%h\t%Cblue%ad\t%Creset%s%Cgreen  [%cn] %Cred%d'
+    local -r format="$( \
+        echo -e "%C(yellow)%h\t%Cblue%ad\t%Creset%s%Cgreen  [%cn] %Cred%d" \
+    )"
 
     git log \
         --pretty=format:"${format}" \
