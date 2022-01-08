@@ -31,7 +31,7 @@ function main {
 
     if git::is_dirty
     then
-      proc::die 'This repo is dirty. Please commit your open changes first!'
+      proc::die 'This repo is dirty. Please commit or stash your open changes first!'
     fi
 
     log::info "Undoing last commit"
