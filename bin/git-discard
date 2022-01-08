@@ -32,7 +32,7 @@ function main {
 
     if git::is_dirty
     then
-      proc::die 'This repo is dirty. Please commit your open changes first!'
+      exit::error 'This repo is dirty. Please commit your open changes first!'
     fi
 
     log::info "Staging all changed files prior to discard"

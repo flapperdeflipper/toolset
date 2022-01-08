@@ -63,6 +63,7 @@ export TOOLSET_SCRIPT_PATH
 ## Import all shell libraries
 import cache
 import logging
+import exit
 import fs
 import var
 import string

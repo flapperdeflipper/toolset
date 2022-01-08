@@ -35,21 +35,21 @@ function main {
 
     if ! var::matches "${node}" compute.internal
     then
-        proc::die "Node does not match compute.internal"
+        exit::error "Node does not match compute.internal"
     fi
 
     log::info "Cordoning node ${node}"
 
     if ! interact::prompt_bool
     then
-        proc::exit_warning "Action canceled!"
+        exit::warning "Action canceled!"
     fi
 
     if k8s::cordon "${node}"
     then
         log::info "Cordon for ${node} finished... [OK]"
     else
-        proc::die "Failed to cordon node ${node}! [FAIL]"
+        exit::error "Failed to cordon node ${node}! [FAIL]"
     fi
 }
 

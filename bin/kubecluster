@@ -92,7 +92,7 @@ function main {
 
     if ! chronic kubectl config use-context "${context}"
     then
-        proc::exit_error "kubectl context ${context} not found"
+        exit::error "kubectl context ${context} not found"
     fi
 
     exec kubectl "${@}"

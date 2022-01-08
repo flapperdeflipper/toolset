@@ -142,7 +142,7 @@ function main {
 
     if ! fullpodname="$( k8s::podname "${podname}" )"
     then
-        proc::exit_error "Failed to form full name for ${podname}"
+        exit::error "Failed to form full name for ${podname}"
     fi
 
 
@@ -150,7 +150,7 @@ function main {
 
     if ! k8s::delete_object "${fullpodname}" pod "${namespace}"
     then
-        proc::exit_error "Failed to delete pod ${fullpodname}"
+        exit::error "Failed to delete pod ${fullpodname}"
     fi
 
 
@@ -158,7 +158,7 @@ function main {
 
     if ! manifest="$( create_manifest "${nodename}" "${fullpodname}" )"
     then
-        proc::exit_error "Failed to create manifest for ${fullpodname}"
+        exit::error "Failed to create manifest for ${fullpodname}"
     fi
 
 
@@ -166,7 +166,7 @@ function main {
 
     if ! chronic kubectl -n "${namespace}" apply -f "${manifest}"
     then
-        proc::exit_error "Applying manifest ${manifest} failed!"
+        exit::error "Applying manifest ${manifest} failed!"
     else
         log::info "Removing manifest file ${manifest}"
         rm "${manifest}"
@@ -177,7 +177,7 @@ function main {
 
     if ! k8s::pod_wait_until_ready "${fullpodname}" "${namespace}"
     then
-        proc::exit_error "Pod ${fullpodname} did not become ready!"
+        exit::error "Pod ${fullpodname} did not become ready!"
     fi
 
     log::info "Pod ${fullpodname} ready! Spawning shell"

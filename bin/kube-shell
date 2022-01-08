@@ -54,7 +54,7 @@ function main {
                 shift
             ;;
             *)
-                proc::die "Unknown input: ${1} ${2}"
+                exit::error "Unknown input: ${1} ${2}"
             ;;
         esac
 
@@ -75,22 +75,22 @@ function main {
         | awk '{print $1}' \
     )"
     then
-        proc::exit_error "Failed to retrieve pod"
+        exit::error "Failed to retrieve pod"
     fi
 
     if [ -z "${pod}" ]
     then
-        proc::exit_warning "No pods found in namespace ${namespace} matching regex \"${regex}\""
+        exit::warning "No pods found in namespace ${namespace} matching regex \"${regex}\""
     fi
 
     log::info "Running command ${cmd} on ${pod}"
 
     if ! kubectl -n "${namespace}" exec -ti "${pod}" -- ${cmd}
     then
-        proc::exit_error "Failed to run command ${cmd} on pod ${pod}"
+        exit::error "Failed to run command ${cmd} on pod ${pod}"
     fi
 
-    proc::exit_ok "Exit"
+    exit::info "Exit"
 }
 
 main "${@}"

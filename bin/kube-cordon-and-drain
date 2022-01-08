@@ -36,14 +36,14 @@ function main {
 
     if ! var::matches "${node}" compute.internal
     then
-        proc::die "Node does not match compute.internal"
+        exit::error "Node does not match compute.internal"
     fi
 
     log::info "Cordoning and draining ${node}"
 
     if ! interact::prompt_bool
     then
-        proc::exit_warning "Action canceled!"
+        exit::warning "Action canceled!"
     fi
 
     log::info "Cordoning node ${node}"
@@ -52,16 +52,16 @@ function main {
     then
         log::info "Cordon for ${node} finished... [OK]"
     else
-        proc::die "Failed to cordon node ${node}! [FAIL]"
+        exit::error "Failed to cordon node ${node}! [FAIL]"
     fi
 
     log::info "Draining node ${node}"
 
     if k8s::drain "${node}"
     then
-        proc::exit_ok "Drain for node ${node} finished... [OK]"
+        exit::info "Drain for node ${node} finished... [OK]"
     else
-        proc::die "Failed to drain node ${node}"
+        exit::error "Failed to drain node ${node}"
     fi
 
 }

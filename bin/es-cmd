@@ -53,7 +53,7 @@ function main {
     if [[ -n "${data}" ]]
     then
         echo "${data}" | jq empty &>/dev/null \
-            || proc::die "Invalid json!"
+            || exit::error "Invalid json!"
 
         cmd+=(-d "${data}")
 
@@ -63,7 +63,7 @@ function main {
 
     if [[ "${method}" == "TRY" ]] || [[ "${method}" == "try" ]]
     then
-        proc::exit_ok "${cmd[*]}"
+        exit::info "${cmd[*]}"
     fi
 
     command ${cmd[*]}

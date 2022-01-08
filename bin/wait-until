@@ -98,9 +98,9 @@ function main {
 
     if string::equals "${rc}" "${exitcode}"
     then
-        proc::exit_ok "Command: succeeded"
+        exit::info "Command: succeeded"
     else
-        proc::exit_error "Command: exit ${exitcode} after ${tries} retries"
+        exit::error "Command: exit ${exitcode} after ${tries} retries"
     fi
 }
 

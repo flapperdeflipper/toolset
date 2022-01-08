@@ -90,7 +90,7 @@ function main {
                 shift
             ;;
             *)
-                proc::die "Unknown input: ${1} ${2}"
+                exit::error "Unknown input: ${1} ${2}"
             ;;
         esac
 
@@ -112,7 +112,7 @@ function main {
     if var::equals "${object_type}" pod
     then
         k8s::is_pod "${object}" "${namespace}" \
-            || proc::die "Pod ${object} not found in ns ${namespace}"
+            || exit::error "Pod ${object} not found in ns ${namespace}"
 
         connect_to="pod/${object}"
 
@@ -120,7 +120,7 @@ function main {
     elif var::equals "${object_type}" service
     then
         k8s::is_service "${object}" "${namespace}" \
-            || proc::die "service ${object} not found in ns ${namespace}"
+            || exit::error "service ${object} not found in ns ${namespace}"
 
         connect_to="service/${object}"
 
@@ -128,7 +128,7 @@ function main {
     elif var::equals "${object_type}" deployment
     then
         k8s::is_deployment "${object}" "${namespace}" \
-            || proc::die "deployment ${object} not found in ns ${namespace}"
+            || exit::error "deployment ${object} not found in ns ${namespace}"
 
         connect_to="deployment/${object}"
 
@@ -136,7 +136,7 @@ function main {
     elif var::equals "${object_type}" statefulset
     then
         k8s::is_statefulset "${object}" "${namespace}" \
-            || proc::die "statefulset ${object} not found in ns ${namespace}"
+            || exit::error "statefulset ${object} not found in ns ${namespace}"
 
         connect_to="statefulset/${object}"
     fi
@@ -156,10 +156,10 @@ function main {
         "${connect_to}" \
         "${local_port}:${remote_port}"
     then
-        proc::exit_error "Failed to setup port forward to ${local_port}:${connect_to}:${remote_port}"
+        exit::error "Failed to setup port forward to ${local_port}:${connect_to}:${remote_port}"
     fi
 
-    proc::exit_ok "Exit"
+    exit::info "Exit"
 }
 
 main "${@}"

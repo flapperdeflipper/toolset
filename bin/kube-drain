@@ -35,21 +35,21 @@ function main {
 
     if ! var::matches "${node}" compute.internal
     then
-        proc::die "Node does not match compute.internal"
+        exit::error "Node does not match compute.internal"
     fi
 
     log::info "Draining node ${node}"
 
     if ! interact::prompt_bool
     then
-        proc::exit_warning "Action canceled!"
+        exit::warning "Action canceled!"
     fi
 
     if k8s::drain "${node}"
     then
-        proc::exit_ok "Drain for node ${node} finished... [OK]"
+        exit::info "Drain for node ${node} finished... [OK]"
     else
-        proc::die "Failed to drain node ${node}"
+        exit::error "Failed to drain node ${node}"
     fi
 }
 

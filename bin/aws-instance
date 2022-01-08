@@ -166,7 +166,7 @@ function main() {
     ## Get instance id from aws
     if ! instance_id="$( aws::ec2::instance_id "${instance}" )"
     then
-        proc::exit_error "Invalid input for ${instance}: Instance input is not an id, not an internal ip and not a DNS name..."
+        exit::error "Invalid input for ${instance}: Instance input is not an id, not an internal ip and not a DNS name..."
     fi
 
     if [ -n "${dryrun}" ]

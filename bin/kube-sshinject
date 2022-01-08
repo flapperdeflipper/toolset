@@ -124,12 +124,12 @@ function main {
 
     if ! string::endswith ".pub" "${pubkey}"
     then
-        proc::exit_error "Public key not ending with .pub! Using a privkey?"
+        exit::error "Public key not ending with .pub! Using a privkey?"
     fi
 
     if ! fs::is_file "${pubkey}"
     then
-        proc::exit_error "Public keyfile ${pubkey} not found!"
+        exit::error "Public keyfile ${pubkey} not found!"
     fi
 
     local pubkeycontent
@@ -139,7 +139,7 @@ function main {
 
     if ! interact::prompt_bool
     then
-        proc::exit_warning "Action canceled!"
+        exit::warning "Action canceled!"
     fi
 
     log::info "Deleting existing app=k8s-key-installer pods if present"
@@ -157,7 +157,7 @@ function main {
             --authfile "${authfile}" \
             | kubectl apply -f- > /dev/null 2>&1
         then
-            proc::exit_error "Failed to create manifest for node: ${node}"
+            exit::error "Failed to create manifest for node: ${node}"
         fi
 
         log::info "${node}: Waiting for pod to be started"

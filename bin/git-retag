@@ -40,12 +40,12 @@ function main {
 
     if git::is_dirty
     then
-      proc::die 'This repo is dirty. Please commit your open changes first!'
+        exit::error 'This repo is dirty. Please commit your open changes first!'
     fi
 
     if ! git::is_tag "${input}"
     then
-        proc::die "Tag ${input} not found!"
+        exit::error "Tag ${input} not found!"
     fi
 
     log::info "Retagging to ${input}"

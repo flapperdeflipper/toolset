@@ -42,7 +42,7 @@ function main {
 
     if ! fs::exists "${HOME}/.gnulinks"
     then
-        proc::exit_error "Not found: ${HOME}/.gnulinks"
+        exit::error "Not found: ${HOME}/.gnulinks"
     fi
 
     log::info "Updating symlinks for gnu utils"

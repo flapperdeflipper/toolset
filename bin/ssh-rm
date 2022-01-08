@@ -41,7 +41,7 @@ function main {
 
     if ! var::matches "${lineno}" "${re}"
     then
-        proc::die "error: line number missing" >&2
+        exit::error "error: line number missing" >&2
     fi
 
     sed -i -e "${lineno}d" ~/.ssh/known_hosts

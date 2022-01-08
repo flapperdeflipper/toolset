@@ -93,7 +93,7 @@ function main {
         --fetch-cert \
         > "${keyfile}"
     then
-        proc::die "Failed to retrieve key from controller"
+        exit::error "Failed to retrieve key from controller"
     fi
 }
 

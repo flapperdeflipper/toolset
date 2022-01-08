@@ -161,7 +161,7 @@ function main {
           uri="$( git::provider_uri "bitbucket" "${input}" )"
 
     else
-          proc::die "Failed to determine git provider"
+          exit::error "Failed to determine git provider"
     fi
 
     /usr/bin/open "${baselink}/${uri}"

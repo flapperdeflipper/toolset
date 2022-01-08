@@ -35,7 +35,7 @@ function main {
 
     if ! depends::check_list::silent fzf find
     then
-        proc::exit_error "This tool depends on fzf"
+        exit::error "This tool depends on fzf"
     fi
 
     exec find "${HOME}/bin/" "${HOME}/.toolset/bin" \
