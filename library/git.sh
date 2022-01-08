@@ -5,12 +5,12 @@ function git::baseurl {
 
     if ! url="$( git remote -v | grep ^origin | awk '/push/ {print $2}' )"
     then
-        proc::die "Failed to retrieve git remote url from repository"
+        exit::error "Failed to retrieve git remote url from repository"
     fi
 
     if var::is_empty "${url}"
     then
-        proc::die "Failed to get url from git remote"
+        exit::error "Failed to get url from git remote"
     fi
 
     if string::startswith "git@" "${url}"

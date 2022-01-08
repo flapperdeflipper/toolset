@@ -346,7 +346,7 @@ function k8s::drain {
 
     log::info "Draining node ${node}"
 
-    if proc::log_command "kubectl drain ${node} --delete-local-data --ignore-daemonsets"
+    if proc::log_action "kubectl drain ${node} --delete-local-data --ignore-daemonsets"
     then
         return 0
     fi
@@ -374,7 +374,7 @@ function k8s::cordon {
 
     log::info "Cordoning node ${node}"
 
-    if proc::log_command "kubectl cordon ${node}"
+    if proc::log_action "kubectl cordon ${node}"
     then
         return 0
     fi

@@ -68,9 +68,9 @@ function proc::log_action {
     else
         log::info "Command ${command} succeeded"
         log::stdin "DEBUG" < "${tmpfile}" && rm "${tmpfile}"
-    fi
 
-    log::info "Full output in ${tmpfile}"
+        return 0
+    fi
 
     return 1
 }
@@ -106,144 +106,5 @@ function proc::run {
         proc::watch "${command}" -t
     else
         bash -c "${command}"
-    fi
-}
-
-################################################################################
-## Exit functions for scripts                                                 ##
-################################################################################
-
-##
-## Print to log and exit with exit_code
-##
-
-function proc::exit_log {
-    local message="${1}"
-    local severity="${2}"
-    local exit_code="${3:-0}"
-
-    log::trace "${FUNCNAME[0]}: ${*} - Logging to output with ${severity} and exit ${exit_code}"
-
-    log::logger "${message}" "${severity}"
-
-    exit "${exit_code}"
-}
-
-
-##
-## Print to log and exit OK
-##
-
-function proc::exit_ok {
-    local message="${1}"
-    local exit_code="${2:-0}"
-
-    log::trace "${FUNCNAME[0]}: ${*} - Logging OK and exiting"
-
-    proc::exit_log "${message}" INFO "${exit_code}"
-}
-
-
-function proc::exit { proc::exit_ok "${@}"; }
-
-
-##
-## Print debug to log and exit OK
-##
-
-function proc::exit_debug {
-    local message="${1}"
-    local exit_code="${2:-0}"
-
-    log::trace "${FUNCNAME[0]}: ${*} - Logging DEBUG and exiting"
-
-    proc::exit_log "${message}" DEBUG "${exit_code}"
-}
-
-
-##
-## Print warning to log and exit NOK
-##
-
-function proc::exit_warning {
-    local message="${1}"
-    local exit_code="${2:-1}"
-
-    log::trace "${FUNCNAME[0]}: ${*} - Logging WARNING and exiting"
-
-    proc::exit_log "${message}" WARNING "${exit_code}"
-}
-
-
-##
-## Print error to log and exit NOK
-##
-
-function proc::exit_error {
-    local message="${1}"
-    local exit_code="${2:-1}"
-
-    log::trace "${FUNCNAME[0]}: ${*} - Logging ERROR and exiting"
-
-    proc::exit_log "${message}" ERROR "${exit_code}"
-}
-
-
-function proc::die { proc::exit_error "${@}"; }
-
-
-##
-## Error out when input is false
-##
-
-function proc::die_if_false {
-    local value="${1:-""}"
-    local message="${2:-""}"
-    local severity="${3:-"ERROR"}"
-    local exit_code="${4:-1}"
-
-    log::trace "${FUNCNAME[0]}: ${*} - Error out when input is false"
-
-    if var::is_false "${value}"
-    then
-        proc::exit_log "${message}" "${severity}" "${exit_code}"
-    fi
-}
-
-
-##
-## Error out if input is true
-##
-
-function proc::die_if_true {
-    local value=${1:-}
-    local message=${2:-}
-    local severity="${3:-"ERROR"}"
-    local exit_code="${4:-1}"
-
-    log::trace "${FUNCNAME[0]}: ${*} - Error out when input is true"
-
-    if var::is_true "${value}"
-    then
-        proc::exit_log "${message}" "${severity}" "${exit_code}"
-    fi
-}
-
-
-##
-## Error out if input is empty
-##
-
-function proc::die_if_empty {
-    local value=${1:-}
-    local message=${2:-}
-    local severity="${3:-"ERROR"}"
-    local exit_code="${4:-1}"
-
-    log::trace "${FUNCNAME[0]}: ${*} - Error out when input is empty"
-
-    if var::is_empty "${value}"
-    then
-        proc::exit_log "${message}" "${severity}" "${exit_code}"
     fi
 }
