@@ -45,7 +45,7 @@ function main {
         proc::exit_error "Not found: ${HOME}/.gnulinks"
     fi
 
-    logging::info "Updating symlinks for gnu utils"
+    log::info "Updating symlinks for gnu utils"
 
     local src dst
 
@@ -57,21 +57,21 @@ function main {
         if var::matches "${1:-""}" "-a" \
         || var::matches "${1:-""}" "--apply"
         then
-            logging::info "Symlinking ${src} to ${dst}"
+            log::info "Symlinking ${src} to ${dst}"
 
             if [[ -e "${src}" ]] && [[ ! -e "${dst}" ]]
             then
                 ln -sf "${src}" "${dst}"
             else
-                logging::info "Util /usr/local/bin/${util} exists.. Skipped"
+                log::info "Util /usr/local/bin/${util} exists.. Skipped"
                 continue
             fi
         else
-            logging::info "Dry-run: Would link ${src} to ${dst}"
+            log::info "Dry-run: Would link ${src} to ${dst}"
         fi
     done
 
-    logging::info "All done!"
+    log::info "All done!"
 }
 
 main "${@}"

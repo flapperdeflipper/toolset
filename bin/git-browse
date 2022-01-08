@@ -124,7 +124,7 @@ function git::provider_uri {
             ;;
 
          *)
-             logging::error "${FUNCNAME[0]}: Provider ${provider} unknown"
+             log::error "${FUNCNAME[0]}: Provider ${provider} unknown"
              return 1
          ;;
     esac
