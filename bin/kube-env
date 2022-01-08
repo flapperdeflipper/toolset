@@ -141,6 +141,7 @@ function kube_env::list {
 
     installed="$( \
         find "${HOME}/.local/bin/" \
+            -follow \
             -name '*kubectl*' \
             -printf '%f\n' \
         | grep -Eo 'v([0-9]\.?)+$' \
@@ -171,7 +172,7 @@ function kube_env::use {
     fi
 
     installed="$(
-        find "${HOME}/.local/bin/" -name "*${version}*"
+        find "${HOME}/.local/bin/" -follow -name "*${version}*"
     )"
 
     if var::is_empty "${installed}"

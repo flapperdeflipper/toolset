@@ -21,6 +21,23 @@ To get started, clone this repository:
 git clone https://github.com/flapperdeflipper/toolset.git ~/.toolset
 ```
 
+### Add the toolset/bin directory to your PATH
+
+To make the utils accessible, make sure the `bin` directory is added in your
+path variable:
+
+```
+export PATH="${HOME}/.toolset/bin:$PATH"
+```
+
+This will only change the path in your current environment, to get it to work on
+all environments, without having to run the command every time, add it to your
+`bashrc` file:
+
+```
+echo -e 'PATH="${HOME}/.toolset/bin:$PATH' >> ~/.bashrc
+```
+
 ### Install homebrew
 
 ```
@@ -89,30 +106,10 @@ And after that, run the `update-symlinks` script:
 ```
 
 
-### Add the toolset to your PATH
-
-To make the utils accessible, make sure the `bin` directory is added in your
-path variable:
-
-```
-echo -e 'PATH="${HOME}/.toolset/bin:$PATH' >> ~/.bashrc
-```
-
-
-
-
-
-
-
-
-
-
-
-
 
 ## Tools overview
 
-The `tools` utility in the bin directory provides and overview of all tools that
+The `tools` utility in the bin directory provides an overview of all tools that
 are available in this toolset.
 
 To work well with this utility, all scripts should have a `-h` and `--help`

@@ -52,7 +52,7 @@ load "../../../bin/toolset"
 ##
 
 @test "Test that fs::is_socket returns 0 if socket exists" {
-    local socket=$( find /tmp/ -type s | head -n 1 )
+    local socket=$( find /tmp/ -follow -type s | head -n 1 )
     run fs::is_socket "${socket}"
     [ "${status}" -eq 0 ]
 }

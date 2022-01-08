@@ -188,6 +188,7 @@ function helm::list {
 
     installed="$(
         find "${HOME}/.local/bin/" \
+            -follow \
             -name '*helm-*' \
             -exec basename {} \; \
         | grep -Eo 'v([0-9]\.?)+$' \
@@ -234,7 +235,7 @@ function helm::use {
         return 1
     fi
 
-    installed="$(find "${HOME}/.local/bin"/ -name "*${version}*")"
+    installed="$(find "${HOME}/.local/bin"/ -follow -name "*${version}*")"
 
     if var::is_empty "${installed}"
     then
