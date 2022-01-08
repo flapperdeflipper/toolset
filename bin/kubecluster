@@ -78,8 +78,7 @@ function main {
     fi
 
     if var::lt "${#}" 1 \
-    || var::equals "${1:-""}" "-h" \
-    || var::equals "${1:-""}" "--help"
+    || interact::usage "${@}"
     then
         usage
     fi

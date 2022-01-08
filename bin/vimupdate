@@ -25,8 +25,7 @@ EOF
 
 function main {
     if var::gt "${#}" 0 \
-    || var::equals "${1:-""}" "-h" \
-    || var::equals "${1:-""}" "--help"
+    || interact::usage "${@}"
     then
         usage
     fi

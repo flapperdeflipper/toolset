@@ -137,8 +137,7 @@ function main {
     local baselink
 
     if var::gt "${#}" 1 \
-    || var::equals "${1:-""}" "-h" \
-    || var::equals "${1:-""}" "--help"
+    || interact::usage "${@}"
     then
         usage
     fi

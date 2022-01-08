@@ -32,8 +32,7 @@ function main {
     if var::lt "${#}" 1 \
     || var::gt "${#}" 2 \
     || var::is_empty "${1:-""}" \
-    || var::equals "${1:-""}" "-h" \
-    || var::equals "${1:-""}" "--help"
+    || interact::usage "${@}"
     then
         usage
     fi

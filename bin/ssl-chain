@@ -30,8 +30,7 @@ EOF
 function main {
     if var::ne "${#}" 1 \
     || var::is_empty "${1:-""}" \
-    || var::equals "${1:-""}" "-h" \
-    || var::equals "${1:-""}" "--help"
+    || interact::usage "${@}"
     then
         usage
     fi

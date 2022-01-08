@@ -31,8 +31,11 @@ function interact::prompt_bool {
         prompt+=" [y/N]"
     fi
 
-    ## Remove all input that was accidentally inserted during wait
-    read -r -d '' -t 0.1 -n 10000
+    if [[ -z "${BATS_TEST_FILENAME}" ]]
+    then
+        ## Remove all input that was accidentally inserted during wait
+        read -r -d '' -t 0.1 -n 10000
+    fi
 
     log::input "${prompt} -> " 0
     read -r input
@@ -59,7 +62,8 @@ function interact::prompt_bool {
 ##
 
 function interact::prompt_response {
-    [[ $# = 0 ]] && printf "%s: Missing arguments\n" "${FUNCNAME[0]}" && return 2
+    [[ "${#}" == 0 ]] \
+        && printf "%s: Missing arguments\n" "${FUNCNAME[0]}" && return 2
 
     declare def_arg response
     response=""
@@ -67,8 +71,11 @@ function interact::prompt_response {
 
     log::trace "${FUNCNAME[0]}: ${*} - Asking the user for input"
 
-    ## Remove all input that was accidentally inserted during wait
-    read -r -d '' -t 0.1 -n 10000
+    if [[ -z "${BATS_TEST_FILENAME}" ]]
+    then
+        ## Remove all input that was accidentally inserted during wait
+        read -r -d '' -t 0.1 -n 10000
+    fi
 
     while :; do
         log::input "${1} "
@@ -84,7 +91,28 @@ function interact::prompt_response {
         fi
     done
 
-    [[ "${response}" = "-" ]] && response=""
+    [[ "${response}" == "-" ]] && response=""
 
-    printf "%s" "${response}"
+    printf "%s\n" "${response}"
 }
+
+
+##
+## Check if -h or --help is given in arguments
+##
+
+function interact::usage {
+    [[ "${#}" == 0 ]] \
+        && printf "%s: Missing arguments\n" "${FUNCNAME[0]}" && return 2
+
+    local input="${*}"
+
+    if var::matches "${input}" "-h" \
+    || var::matches "${input}" "--help"
+    then
+        return 0
+    fi
+
+    return 1
+}
+
