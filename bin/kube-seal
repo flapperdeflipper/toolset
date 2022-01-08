@@ -31,8 +31,8 @@ function usage {
         export KUBESEAL_CONTROLLER_NAMESPACE=kube-system
 
     Example:
-      cat some.yaml | ${TOOLSET_SCRIPT_NAME} -n default -o default/some-secret.yaml
-      ${TOOLSET_SCRIPT_NAME} -n default -f some.yaml -o default/some-secret.yaml
+      cat some.yaml | ${TOOLSET_SCRIPT_NAME} -n default -o default/somesec.yaml
+      ${TOOLSET_SCRIPT_NAME} -n default -f some.yaml -o default/somesec.yaml
 
 EOF
 

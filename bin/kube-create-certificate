@@ -27,7 +27,7 @@ function usage {
       -o, --output    - The output to write to (Default: /dev/stdout)
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} -s some-secret --key key.pem --cert cert.pem
+      ${TOOLSET_SCRIPT_NAME} -s some --key key.pem --cert cert.pem
 
 EOF
 
