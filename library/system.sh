@@ -9,3 +9,13 @@ function system::detect_mac_version {
 
     return "${?}"
 }
+
+function system::is_mac {
+    if [[ "$( uname )" == "Darwin" ]]
+    then
+        return 0
+    fi
+
+    return 1
+}
+
