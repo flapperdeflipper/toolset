@@ -147,6 +147,46 @@ load "../../../bin/toolset"
     [ "$status" -eq 2 ]
 }
 
+##
+## string::chomp
+##
+
+@test "Test that string::chomp strips carriage returns from a string" {
+    run string::chomp "$( printf "aaaa\n" )"
+    [ "$status" -eq 0 ]
+    [ "$output" = "aaaa" ]
+
+    run string::chomp "$( printf "aaaa\n\n" )"
+    [ "$status" -eq 0 ]
+    [ "$output" = "aaaa" ]
+}
+
+@test "Test that string::chomp strips carriage returns from stdin" {
+    output="$( printf "aaaa\n" | string::chomp )"
+    [ "$?" -eq 0 ]
+    [ "$output" = "aaaa" ]
+
+    output="$( printf "aaaa\n\n" | string::chomp )"
+    [ "$?" -eq 0 ]
+    [ "$output" = "aaaa" ]
+}
+
+@test "Test that string::chomp returns 1 when no input" {
+    run string::chomp
+    [ "$status" -eq 1 ]
+
+    run string::chomp ""
+    [ "$status" -eq 1 ]
+}
+
+@test "Test that string::chomp returns 2 when invalid input" {
+    run string::chomp "" ""
+    [ "$status" -eq 2 ]
+
+    run string::chomp "a" "b"
+    [ "$status" -eq 2 ]
+}
+
 
 ##
 ## string::trim

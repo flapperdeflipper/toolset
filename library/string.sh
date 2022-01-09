@@ -90,6 +90,27 @@ function string::length {
     printf "%s" "${#string}"
 }
 
+##
+## Strip carriage return from string
+##
+
+function string::chomp {
+    [[ "${#}" -le 1 ]] || return 2
+
+    local string="${1}"
+
+    if var::is_empty "${string}" && var::is_stdin
+    then
+        string="$( < /dev/stdin )"
+    elif var::is_empty "${string}"
+    then
+        return 1
+    fi
+
+    log::trace "${FUNCNAME[0]}: ${*} - Stripping whitespace from string"
+
+    printf "%s" "${string/"$'\n'"/}"
+}
 
 ##
 ## Remove all superfluous whitespace
