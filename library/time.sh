@@ -18,11 +18,13 @@ function time::human_readable_seconds {
 
 
 function time::now {
+    local timezone="${1:-"Europe/Amsterdam"}"
+
     declare now
 
     log::trace "${FUNCNAME[0]}: ${*} - Retrieving unixtime in seconds"
 
-    now="$(date --universal +%s)" || return $?
+    now="$( TZ="${timezone}" date --universal +%s )" || return $?
 
     printf "%s" "${now}"
 }
