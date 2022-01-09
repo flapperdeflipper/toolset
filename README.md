@@ -3,13 +3,20 @@
 A bash library and toolset used for devops tasks and platform infrastructure on
 mac osx.
 
-The toolset is a set of tools and libraries to make bash scripts a bit easier to
-read, faster to develop and avoid some of the large pitfals that come with shell
-scripting.
+This toolset is a set of tools, functions and libraries to make bash scripts a bit easier to
+read, faster to develop and avoids some of the large pitfals that come with shell
+scripting in bash.
 
-I use it myself both for shell scripts and as the daily toolset by loading the
-libraries in my environment.
+It is a part of my dotfiles and configuration setup that I use for my personal and work computers, 
+by splitting this set and my dotfiles, which are private I want to reduce the complexity of my local setup 
+and hope that other people can make use of this set of tools.
 
+I use it myself personally for both shell scripts and as the daily toolset by loading the
+libraries in my environment through my `bashrc`.
+
+I expect that some of the dependencies are not fully listed.
+
+I'm open to merge requests for useful additions.
 
 ## Setup
 
