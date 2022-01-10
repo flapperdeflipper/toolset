@@ -17,7 +17,7 @@ function usage {
 
     Check an ip or host for blacklist entries
 
-    This script checks an ip or hostname agains a platitude of dnsbl blacklists
+    This script checks an ip or hostname agains a multitude of dnsbl blacklists
     to ensure the ip is not blacklisted.
 
     ${TOOLSET_SCRIPT_NAME} <ip> [-h|--help]

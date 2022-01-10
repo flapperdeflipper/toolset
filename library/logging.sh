@@ -85,7 +85,7 @@ function log::logger {
         "${color}[+]${reset}"
         "${bold}${white}%s${reset}"
         "-"
-        "[${color}%s${reset}]"
+        "${color}%-5s${reset}"
         "-"
         "${bold}${white}%s${reset}${linefeed}"
     )

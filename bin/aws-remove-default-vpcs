@@ -41,7 +41,9 @@ function main {
         exit 1
     fi
 
-    for region in $(aws ec2 describe-regions --region eu-west-1 | jq -r .Regions[].RegionName)
+    local api_region="${AWS_REGION:-"${AWS_DEFAULT_REGION:-"eu-west-1"}"}" ## Use eu-west-1 as default region
+
+    for region in $( aws ec2 describe-regions --region "${api_region}" | jq -r .Regions[].RegionName )
     do
         echo "* Region ${region}"
 

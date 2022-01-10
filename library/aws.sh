@@ -194,6 +194,7 @@ function aws::ec2::console_output {
 
 function aws::ec2::weblink {
     local instance="${1}"
+    local region="${2:-"${AWS_REGION:-"${AWS_DEFAULT_REGION:-"eu-west-1"}"}"}" ## Use eu-west-1 as default region
 
     if ! instance_id="$( aws::ec2::instance_id "${instance}" )"
     then
@@ -203,7 +204,7 @@ function aws::ec2::weblink {
 
     log::trace "${FUNCNAME[0]}: ${*} - Generating webconsole link for instance ${instance}"
 
-    printf "https://console.aws.amazon.com/ec2/v2/home?region=eu-central-1#Instances:search=%s;sort=instanceState" "${instance}"
+    printf "https://console.aws.amazon.com/ec2/v2/home?region=$region#Instances:search=%s;sort=instanceState" "${instance}"
 }
 
 
@@ -482,7 +483,7 @@ EOF
 
 function aws::ses::whitelist_domain {
     local domain="${1}"
-    local region="${2:-eu-central-1}"
+    local region="${2:-"${AWS_REGION:-"${AWS_DEFAULT_REGION:-"eu-west-1"}"}"}" ## Use eu-west-1 as default region
     local output
 
     if ! output="$( aws::cli ses verify-domain-identity \
@@ -530,7 +531,8 @@ function aws::ecr::list_repos {
 
 function aws::ecr::list_tags {
     local registry="${1}"
-    local region="${2:-eu-central-1}"
+    local region="${2:-"${AWS_REGION:-"${AWS_DEFAULT_REGION:-"eu-west-1"}"}"}" ## Use eu-west-1 as default region
+
     local account_id
 
     if ! account_id="$( aws::sts::account_id )"

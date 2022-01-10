@@ -90,6 +90,7 @@ function string::length {
     printf "%s" "${#string}"
 }
 
+
 ##
 ## Strip carriage return from string
 ##
@@ -111,6 +112,7 @@ function string::chomp {
 
     printf "%s" "${string/"$'\n'"/}"
 }
+
 
 ##
 ## Remove all superfluous whitespace

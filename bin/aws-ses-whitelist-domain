@@ -34,7 +34,7 @@ function main {
         usage 0
     fi
 
-    local region="${AWS_REGION:-eu-central-1}"
+    local region="${AWS_REGION:-"${AWS_DEFAULT_REGION:-"eu-west-1"}"}" ## Use eu-west-1 as default region
     local domain=""
 
     ## Parse command line arguments

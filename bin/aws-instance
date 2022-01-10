@@ -25,12 +25,12 @@ function usage() {
       --terminate    - Terminate this instance
       --tunnel       - Open a tunnel on a port to this instance
 
-      --region       - The aws region to work in (default: eu-central-1)
+      --region       - The aws region to work in (default: eu-west-1)
       --dry-run      - Don't do, just fake it
 
     Example:
       ## Open a SSH session
-      ${TOOLSET_SCRIPT_NAME} --instance ip-10-30-65-200.eu-central-1.compute.internal
+      ${TOOLSET_SCRIPT_NAME} --instance ip-10-30-65-200.eu-west-1.compute.internal
 
       ## Setup a tunnel (use: local_port:remote_port)
       ${TOOLSET_SCRIPT_NAME} --instance 10.30.65.200 --tunnel 10080:80
@@ -64,7 +64,7 @@ function main() {
         usage 0
     fi
 
-    local region="eu-central-1" ## Use eu-central-1 as default region
+    local region="${AWS_REGION:-"${AWS_DEFAULT_REGION:-"eu-west-1"}"}" ## Use eu-west-1 as default region
 
     local tunnel_ports=""
     local arguments=""
