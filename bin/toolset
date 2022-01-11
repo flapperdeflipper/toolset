@@ -69,15 +69,17 @@ import ssl
 import tests
 import debug
 
+if ( [[ -n "${TRACE}" ]] && [[ "${TRACE}" == 1 ]] ) \
+|| [[ "${-}" =~ x ]]
+then
+    trap 'debug::handle_error "LINENO" "BASH_LINENO" "${BASH_COMMAND}" "${?}"' ERR
+fi
+
 ## Import source script if executed as a script
 if [[ "${-}" != *i* ]] \
 && [[ -z "${BATS_TEST_FILENAME:-""}" ]] \
 && ! shopt -q login_shell
 then
-    if [[ -n "${TRACE}" ]] && [[ "${TRACE}" == 1 ]]
-    then
-        trap 'debug::handle_error "LINENO" "BASH_LINENO" "${BASH_COMMAND}" "${?}"' ERR
-    fi
 
     # shellcheck source=/dev/null
     source "${TOOLSET_SCRIPT_PATH}"
