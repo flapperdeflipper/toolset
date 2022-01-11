@@ -54,11 +54,15 @@ function debug::handle_error() {
 
 function debug::set_debug {
     export TRACE=1
+
+    trap 'debug::handle_error "LINENO" "BASH_LINENO" "${BASH_COMMAND}" "${?}"' ERR
 }
 
 
 function debug::unset_debug {
     export TRACE=""
+
+    trap - ERR
 }
 
 
