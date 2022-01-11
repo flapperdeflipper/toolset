@@ -140,7 +140,7 @@ function reverse_ip {
 
     reverse="$(
         echo "${ip}" \
-        | sed -ne "s~^\([0-9]\{1,3\}\)\.\([0-9]\{1,3\}\)\.\([0-9]\{1,3\}\)\.\([0-9]\{1,3\}\)$~\4.\3.\2.\1~p"
+        | sed -ne "s#^\([0-9]\{1,3\}\)\.\([0-9]\{1,3\}\)\.\([0-9]\{1,3\}\)\.\([0-9]\{1,3\}\)\$#\4.\3.\2.\1#p"
     )"
 
     if [[ -z "${reverse}" ]]
@@ -231,20 +231,15 @@ function main {
 
     local input="${1}"; shift
     local reverse
-    local domain
     local ip_address
 
     if ! net::is_fqdn "${input}"
     then
-        log::info "You entered an IP: ${input}"
-
         ip_address="${input}"
         reverse="$( reverse_ip "${input}" )" \
             || exit::error "IP not valid."
 
     else
-        log::info "You entered a domain: ${input}"
-
         if ! ip_address="$( host "${input}" | head -n1 | awk '{print $4}' )"
         then
             exit::error "Failed to resolve hostname to an ip"
@@ -257,7 +252,8 @@ function main {
     local reverse_dns
           reverse_dns="$( dig +short -x "${ip_address}" )"
 
-    log::info "${input} name ${reverse_dns}"
+    log::info "Input: ${input}"
+    log::info "Reverse: ${reverse_dns}"
 
     echo
 
