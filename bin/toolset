@@ -9,10 +9,9 @@
 ## source or import them manually.
 ##
 
-
 ## Set error handling if not used in an interactive or login shell
 ## Then it should be done in the shell config itself
-if [[ "${-}" != *i* ]] \
+if [[ ! "${-}" =~ i ]] \
 && [[ -z "${BATS_TEST_FILENAME:-""}" ]] \
 && ! shopt -q login_shell
 then
@@ -23,37 +22,26 @@ then
 fi
 
 
+## Set the name of the script
+readonly TOOLSET_SCRIPT_PATH="${1:-""}"
+readonly TOOLSET_SCRIPT_NAME="$( basename "${TOOLSET_SCRIPT_PATH:-""}" )"
+
 ## Set $0 to the script itself
 declare BASH_ARGV0="${1:-""}"
-
-
-## Set the name of the script
-declare TOOLSET_SCRIPT_PATH="${1:-""}"
-declare TOOLSET_SCRIPT_NAME="$( basename "${TOOLSET_SCRIPT_PATH:-""}" )"
-
 
 ## Shift the first argument (the scriptname itself, which we've set to $0)
 shift
 
-
-## Set the toolset version number
-declare TOOLSET_VERSION="0.0.1"
-
-
 ## Set the path to the bin directory
-declare TOOLSET_BIN_PATH="$( dirname "${BASH_SOURCE[0]}" )"
-
+readonly TOOLSET_BIN_PATH="$( dirname "${BASH_SOURCE[0]}" )"
 
 ## Set the library path in our environment
-declare TOOLSET_LIBRARY_PATH="$( realpath "${TOOLSET_BIN_PATH}/../library" )"
-
+readonly TOOLSET_LIBRARY_PATH="$( realpath "${TOOLSET_BIN_PATH}/../library" )"
 
 ## Load the core library
 source "${TOOLSET_LIBRARY_PATH}/core.sh"
 
-
 ## Export toolset variables
-export TOOLSET_VERSION
 export TOOLSET_BIN_PATH
 export TOOLSET_LIBRARY_PATH
 export TOOLSET_SCRIPT_NAME
