@@ -79,10 +79,12 @@ function main() {
     local -i reboot=0
     local -i terminate=0
 
-    if [[ "${TOOLSET_SCRIPT_NAME}" == "terminate" ]]
-    then
-        terminate=1
-    fi
+    ## Set shortcuts for symlinks
+    case "${TOOLSET_SCRIPT_NAME}" in
+        terminate) terminate=1 ;;
+        ec2info)   info=1      ;;
+        awssh)     ssh=1       ;;
+    esac
 
     ## Parse command line arguments
     while [ "${1:-""}" != "" ]
@@ -145,7 +147,7 @@ function main() {
         shift || true
     done
 
-    total_arguments="$(( console + web + info + reboot + terminate + tunnel + ssh))"
+    total_arguments="$(( console + web + info + reboot + terminate + tunnel + ssh ))"
 
     ## Exit if no instance given
     var::is_empty "${instance}" && usage
@@ -258,7 +260,6 @@ function main() {
         ${dryrun} aws::ec2::info "${instance}" "${region}"
         return $?
     fi
-
 }
 
 main "$@"
