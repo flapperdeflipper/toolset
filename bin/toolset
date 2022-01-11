@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck disable=SC2034,SC2155
+# shellcheck disable=SC2034,SC2154,SC2155
 
 ##
 ## This is a wrapper script to use in scripts
@@ -20,7 +20,6 @@ then
     set -o nounset
     set -o pipefail
 fi
-
 
 ## Set the name of the script
 readonly TOOLSET_SCRIPT_PATH="${1:-""}"
@@ -47,7 +46,6 @@ export TOOLSET_LIBRARY_PATH
 export TOOLSET_SCRIPT_NAME
 export TOOLSET_SCRIPT_PATH
 
-
 ## Import all shell libraries
 import cache
 import logging
@@ -71,13 +69,16 @@ import ssl
 import tests
 import debug
 
-
 ## Import source script if executed as a script
 if [[ "${-}" != *i* ]] \
 && [[ -z "${BATS_TEST_FILENAME:-""}" ]] \
 && ! shopt -q login_shell
 then
+    if [[ -n "${TRACE}" ]] && [[ "${TRACE}" == 1 ]]
+    then
+        trap 'debug::handle_error "LINENO" "BASH_LINENO" "${BASH_COMMAND}" "${?}"' ERR
+    fi
+
     # shellcheck source=/dev/null
     source "${TOOLSET_SCRIPT_PATH}"
 fi
-
