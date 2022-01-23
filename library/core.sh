@@ -10,23 +10,30 @@ function core::import {
 
     local -ra names=("${@}")
 
-    ## Loop over array
+    ## Loop over all files given as input
     for file in "${names[@]}"
     do
+        ## Check if lib with file extension found in PATH
         if ! filepath="$( which "${file}.sh" )"
         then
+            ## Otherwise check if file without extension is a script
             if file "$( which "${file}" )" | grep -q 'shell script'
             then
+                ## If so, set as filepath
                 filepath="$( which "${file}" )"
             fi
         fi
 
+        ## If filepath doesn't exist, it doesn't exist as file or file.sh in PATH
         if [[ ! -f "${filepath}" ]]
         then
+            ## check if it's a full path that is given
             if [[ -f "${file}" ]]
             then
+                ## If so, set the basename and assume it's in library path
                 filename="$( basename "${file}" )"
             else
+                ## if not, append file extension and assume it's in library path
                 filename="${file}.sh"
             fi
 
