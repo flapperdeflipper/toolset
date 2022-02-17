@@ -47,6 +47,9 @@ function git::provider_uri {
 
         gitlab)
             case "${arguments}" in
+                --tags|-t)
+                    printf -- "-/tags"
+                    ;;
                 --pipe|-ci)
                     printf -- "pipelines"
                     ;;
