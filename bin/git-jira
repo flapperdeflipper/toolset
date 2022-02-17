@@ -34,13 +34,20 @@ function main {
 
     if ! var::matches "${branch}" "feature/"
     then
-        log::warning "Unknown branch scheme!"
-        exit 0
+        exit::warning "Unknown branch scheme!"
     fi
 
     local issue="${branch#feature/}"
 
-    open "https://tiqets.atlassian.net/browse/${issue}"
+    if ! fs::is_file "${HOME}/.jira"
+    then
+        exit::error "${HOME}/.jira containing orgname not found!"
+    fi
+
+    local orgname
+          orgname="$( < "${HOME}/.jira" )"
+
+    open "https://${orgname}.atlassian.net/browse/${issue}"
 }
 
 main "${@}"
