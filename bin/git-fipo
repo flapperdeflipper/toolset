@@ -1,0 +1,52 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    First push
+
+    ${TOOLSET_SCRIPT_NAME} <url>
+
+   Arguments:
+    -h, --help  - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME}
+
+EOF
+
+    exit 0
+}
+
+function main {
+    if ! var::eq "${#}" 0 \
+    || interact::usage "${@}"
+    then
+        usage
+    fi
+
+    local branch
+          branch="$( git rev-parse --abbrev-ref HEAD )"
+
+    local head_branch
+          head_branch="$( git::head_branch )"
+
+    if git::is_dirty
+    then
+        exit::error "Current workdir on ${branch} is dirty"
+    fi
+
+    if var::equals "${branch}" "${head_branch}"
+    then
+        exit::error "Thou shall not push to ${head_branch}!"
+    fi
+
+    exec git push \
+        --set-upstream origin "${branch}"
+}
+
+main "${@}"

@@ -7,15 +7,15 @@
 function usage {
     cat <<EOF
 
-    Create a new branch based on the jira url
+    Push branch and create merge request
 
-    ${TOOLSET_SCRIPT_NAME} <url>
+    ${TOOLSET_SCRIPT_NAME}
 
    Arguments:
     -h, --help  - Show this menu
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} https://tiqets.atlassian.net/browse/TIQ04-30304
+      ${TOOLSET_SCRIPT_NAME} -d <description>
 
 EOF
 
@@ -23,11 +23,26 @@ EOF
 }
 
 function main {
-    if ! var::eq "${#}" 0 \
-    || interact::usage "${@}"
-    then
-        usage
-    fi
+    var::eq "${#}" 0 && usage
+
+    local description=""
+
+    while [[ "${1:-""}" != "" ]]
+    do
+        case "${1}" in
+            -h|--help)
+                usage
+            ;;
+            -d|--desc|--description)
+                shift
+                description="${*}"
+                break
+            ;;
+            *)
+                usage
+            ;;
+        esac
+    done
 
     local branch
           branch="$( git rev-parse --abbrev-ref HEAD )"
@@ -47,10 +62,12 @@ function main {
 
     local issue="${branch#feature/}"
 
-    local description
+    if var::empty "${description}"
+    then
           description="$( \
               interact::prompt_response "Please give a title for your MR" \
           )"
+    fi
 
     exec git push \
         --set-upstream origin "${branch}" \
