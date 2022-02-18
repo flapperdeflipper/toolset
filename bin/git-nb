@@ -1,0 +1,57 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Create a new branch based on the jira url
+
+    ${TOOLSET_SCRIPT_NAME} <url>
+
+   Arguments:
+    -h, --help  - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} https://tiqets.atlassian.net/browse/TIQ04-30304
+
+EOF
+
+    exit 0
+}
+
+function main {
+    local input="${*}"
+
+    if ! var::eq "${#}" 1 \
+    || interact::usage "${@}" \
+    || var::empty "${input}"
+    then
+        usage
+    fi
+
+    local branch
+          branch="$( git rev-parse --abbrev-ref HEAD )"
+
+    if git::is_dirty
+    then
+        exit::error "Current workdir on ${branch} is dirty"
+    fi
+
+
+    local head_branch
+          head_branch="$( git::head_branch )"
+
+    if ! var::match "${branch}" "${head_branch}"
+    then
+        git checkout "${head_branch}"
+    fi
+
+    local issue="${input##*/}"
+
+    exec git checkout -b "feature/${issue}"
+}
+
+main "${@}"
