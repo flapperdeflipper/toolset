@@ -8,6 +8,8 @@ function usage {
     cat <<EOF
 
     Show jira issue based on branch name
+    Reads ~/.jira to retrieve the orgname
+
 
     ${TOOLSET_SCRIPT_NAME}
 
@@ -29,6 +31,14 @@ function main {
         usage
     fi
 
+    local orgname
+          orgname="$( < "${HOME}/.jira" )"
+
+    if ! git remote -v | grep -q "gitlab.com/${orgname}"
+    then
+        exit::error "Not a work repository"
+    fi
+
     local branch
           branch="$( git rev-parse --abbrev-ref HEAD )"
 
@@ -43,9 +53,6 @@ function main {
     then
         exit::error "${HOME}/.jira containing orgname not found!"
     fi
-
-    local orgname
-          orgname="$( < "${HOME}/.jira" )"
 
     open "https://${orgname}.atlassian.net/browse/${issue}"
 }
