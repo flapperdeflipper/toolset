@@ -65,13 +65,12 @@ function interact::prompt_response {
     [[ "${#}" == 0 ]] \
         && printf "%s: Missing arguments\n" "${FUNCNAME[0]}" && return 2
 
-    declare def_arg response
-    response=""
-    def_arg="${2}"
+    local response=""
+    local def_arg="${2:-""}"
 
     log::trace "${FUNCNAME[0]}: ${*} - Asking the user for input"
 
-    if [[ -z "${BATS_TEST_FILENAME}" ]]
+    if [[ -z "${BATS_TEST_FILENAME:-""}" ]]
     then
         ## Remove all input that was accidentally inserted during wait
         read -r -d '' -t 0.1 -n 10000
