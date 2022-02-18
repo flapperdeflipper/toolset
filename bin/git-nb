@@ -40,13 +40,13 @@ function main {
         exit::error "Current workdir on ${branch} is dirty"
     fi
 
-
     local head_branch
           head_branch="$( git::head_branch )"
 
     if ! var::match "${branch}" "${head_branch}"
     then
         git checkout "${head_branch}"
+        git pull
     fi
 
     local issue="${input##*/}"
