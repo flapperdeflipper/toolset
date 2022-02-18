@@ -26,6 +26,13 @@ function git::baseurl {
 }
 
 
+function git::head_branch {
+    git remote show origin \
+        | grep 'HEAD branch:' \
+        | awk '{print $NF}'
+}
+
+
 function git::is_dirty {
     if ! var::is_empty "$( git diff --stat )"
     then

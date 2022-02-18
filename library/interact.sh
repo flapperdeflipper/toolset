@@ -77,12 +77,13 @@ function interact::prompt_response {
         read -r -d '' -t 0.1 -n 10000
     fi
 
-    while :; do
+    while :
+    do
         log::input "${1} "
 
         [[ -n "${def_arg}" ]] && [[ "${def_arg}" != "-" ]] && printf "[%s] " "${def_arg}"
 
-        read -r response
+        read -p "> " -r response
         [[ -n "${response}" ]] && break
 
         if [[ -z "${response}" ]] && [[ -n "${def_arg}" ]]; then
