@@ -62,7 +62,7 @@ function main {
 
     local issue="${branch#feature/}"
 
-    if var::empty "${description}"
+    if var::is_empty "${description}"
     then
           description="$( \
               interact::prompt_response "Please give a title for your MR" \
@@ -72,6 +72,7 @@ function main {
     exec git push \
         --set-upstream origin "${branch}" \
         -o merge_request.create \
+        -o merge_request.title="[${issue}] ${description}" \
         -o merge_request.description="[${issue}] ${description}" \
         -o merge_request.target="${head_branch}"
 }
