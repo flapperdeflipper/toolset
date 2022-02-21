@@ -40,7 +40,7 @@ function main {
     fi
 
     local branch
-          branch="$( git rev-parse --abbrev-ref HEAD )"
+          branch="$( git::branch )"
 
     if ! var::matches "${branch}" "feature/"
     then

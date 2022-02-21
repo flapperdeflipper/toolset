@@ -26,6 +26,11 @@ function git::baseurl {
 }
 
 
+function git::branch {
+    git rev-parse --abbrev-ref HEAD
+}
+
+
 function git::head_branch {
     git remote show origin \
         | grep 'HEAD branch:' \

@@ -45,7 +45,7 @@ function main {
     done
 
     local branch
-          branch="$( git rev-parse --abbrev-ref HEAD )"
+          branch="$( git::branch )"
 
     local head_branch
           head_branch="$( git::head_branch )"
