@@ -1,0 +1,60 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Cleanup repo's after testing terraform changes
+
+    ${TOOLSET_SCRIPT_NAME} -d <dir>
+
+   Arguments:
+    -h, --help  - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} -d .
+
+EOF
+
+    exit 0
+}
+
+function main {
+    var::eq "${#}" 0 && usage
+
+    local directory="."
+
+    while [[ "${1:-""}" != "" ]]
+    do
+        case "${1}" in
+            -h|--help)
+                usage
+            ;;
+            -d|--dir|--directory)
+                shift
+                directory="${*:-"."}"
+                break
+            ;;
+            *)
+                usage
+            ;;
+        esac
+    done
+
+    if ! directory="$( realpath "${directory}" )" \
+    || ! fs::is_dir "${directory}"
+    then
+        exit::error "Directory ${directory} not found!"
+    fi
+
+    log::info "Recursively removing .terraform directories"
+    find "${directory}" -type d -name '.terraform' -exec rm -rvf {} \;
+
+    log::info "Recursively removing .terraform.lock.hcl files"
+    find "${directory}" -type f -name '.terraform.lock.hcl' -exec rm -v {} \;
+}
+
+main "${@}"
