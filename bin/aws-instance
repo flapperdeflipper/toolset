@@ -18,15 +18,16 @@ function usage() {
       --instance, -i - The host to connect to with SSH (internal hostname, ip address or aws instance id)
 
     Options:
-      --console      - Open the ec2 terminal console for an instance
-      --web          - Open this instance in the AWS web console
-      --info         - Show instance information
-      --reboot       - Reboot this instance
-      --terminate    - Terminate this instance
-      --tunnel       - Open a tunnel on a port to this instance
+      -n|--not-autoscaled  - When terminating: Node is not in an Autoscaling group
+      --console            - Open the ec2 terminal console for an instance
+      --web                - Open this instance in the AWS web console
+      --info               - Show instance information
+      --reboot             - Reboot this instance
+      --terminate          - Terminate this instance
+      --tunnel             - Open a tunnel on a port to this instance
 
-      --region       - The aws region to work in (default: eu-west-1)
-      --dry-run      - Don't do, just fake it
+      --region             - The aws region to work in (default: eu-west-1)
+      --dry-run            - Don't do, just fake it
 
     Example:
       ## Open a SSH session
@@ -52,7 +53,6 @@ function usage() {
 
       ## Terminate
       ${TOOLSET_SCRIPT_NAME} --instance i-0f8d56785c4959883 --terminate
-
 EOF
 
    exit "${1:-0}"
@@ -70,6 +70,7 @@ function main() {
     local arguments=""
     local dryrun=""
     local instance=""
+    local autoscaled=1
 
     local -i ssh=0
     local -i tunnel=0
@@ -131,6 +132,10 @@ function main() {
 
             --terminate)
                 terminate=1
+            ;;
+
+            -n|--not-autoscaled)
+                autoscaled=0
             ;;
 
             --dry-run)
@@ -242,7 +247,7 @@ function main() {
             return 1
         fi
 
-        ${dryrun} aws::ec2::terminate "${instance}"
+        ${dryrun} aws::ec2::terminate "${instance}" "${autoscaled}"
 
         return "${?}"
     fi

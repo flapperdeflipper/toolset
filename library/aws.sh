@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# vi: ft=bash
+# shellcheck shell=bash
+
 
 ##
 ## A wrapper around AWS cli
@@ -213,7 +216,9 @@ function aws::ec2::weblink {
 ##
 
 function aws::ec2::terminate {
-    local instance="${1}"
+    local instance="${1}"; shift
+    local autoscaled="${1}"
+    local -a cmd
 
     if ! instance_id="$( aws::ec2::instance_id "${instance}" )"
     then
@@ -221,10 +226,29 @@ function aws::ec2::terminate {
         return 1
     fi
 
-    log::trace "${FUNCNAME[0]}: ${*} - Terminating instance ${instance}"
+    log::trace "${FUNCNAME[0]}: ${*} - Terminating instance ${instance} (autoscaled=${autoscaled})"
 
-    if ! aws::cli ec2 terminate-instances \
-         --instance-ids "${instance_id}"
+    if var::eq "${autoscaled}" 0
+    then
+        cmd=(
+            aws::cli ec2
+            terminate-instances
+            --instance-ids "${instance_id}"
+        )
+    elif var::eq "${autoscaled}" 1
+    then
+        cmd=(
+            aws::cli autoscaling
+            terminate-instance-in-auto-scaling-group
+            --instance-id "${instance_id}"
+            --no-should-decrement-desired-capacity
+        )
+    else
+        log::error "${FUNCNAME[0]}: Failed to determine if autoscaling group should be adjusted!"
+        return 1
+    fi
+
+    if ! "${cmd[@]}"
     then
         log::error "${FUNCNAME[0]}: Failed to terminate instance ${instance}"
         return 1
