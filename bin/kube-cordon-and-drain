@@ -44,16 +44,12 @@ function main {
         exit::warning "Action canceled!"
     fi
 
-    log::info "Cordoning node ${node}"
-
     if k8s::cordon "${node}"
     then
         log::info "Cordon for ${node} finished... [OK]"
     else
         exit::error "Failed to cordon node ${node}! [FAIL]"
     fi
-
-    log::info "Draining node ${node}"
 
     if k8s::drain "${node}"
     then

@@ -31,7 +31,7 @@ function interact::prompt_bool {
         prompt+=" [y/N]"
     fi
 
-    if [[ -z "${BATS_TEST_FILENAME}" ]]
+    if [[ -z "${BATS_TEST_FILENAME:-""}" ]]
     then
         ## Remove all input that was accidentally inserted during wait
         read -r -d '' -t 0.1 -n 10000
