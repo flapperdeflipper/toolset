@@ -25,6 +25,9 @@ function git::baseurl {
    printf "%s\n" "${url}"
 }
 
+function git::basedir {
+    git rev-parse --show-toplevel
+}
 
 function git::branch {
     git rev-parse --abbrev-ref HEAD

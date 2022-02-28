@@ -41,10 +41,10 @@ EOF
 
 function git::provider_uri {
     local provider="${1}"
-    local arguments="${2}"
+    local branch="${2}"
+    local arguments="${3}"
 
     case "${provider}" in
-
         gitlab)
             case "${arguments}" in
                 --tags|-t)
@@ -75,7 +75,12 @@ function git::provider_uri {
                     printf -- "-/issues"
                     ;;
                 *)
-                    printf ""
+                    var::equals "${arguments}" "--master" && branch="master"
+
+                    local abspath
+                          abspath="$( realpath --relative-to="$( git::basedir )" . )"
+
+                    printf -- "-/tree/${branch}/${abspath}"
                     ;;
             esac
             ;;
@@ -149,17 +154,20 @@ function main {
     local baselink
           baselink="$( git::baseurl )"
 
+    local branch
+          branch="$( git::branch )"
+
     if var::matches "${baselink}" "github"
     then
-          uri="$( git::provider_uri "github" "${input}" )"
+          uri="$( git::provider_uri "github" "${branch}" "${input}" )"
 
     elif var::matches "${baselink}" "gitlab"
     then
-          uri="$( git::provider_uri "gitlab" "${input}" )"
+          uri="$( git::provider_uri "gitlab" "${branch}" "${input}" )"
 
     elif var::matches "${baselink}" "bitbucket"
     then
-          uri="$( git::provider_uri "bitbucket" "${input}" )"
+          uri="$( git::provider_uri "bitbucket" "${branch}" "${input}" )"
 
     else
           exit::error "Failed to determine git provider"
