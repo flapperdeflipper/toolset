@@ -7,7 +7,7 @@
 function usage {
     cat <<EOF
 
-    First push
+    Rebase and push
 
     ${TOOLSET_SCRIPT_NAME}
 
@@ -29,8 +29,6 @@ function main {
         usage
     fi
 
-    git::sanity
-
     local branch
           branch="$( git::branch )"
 
@@ -39,8 +37,8 @@ function main {
 
     git::sanity "${branch}" "${head_branch}"
 
-    exec git push \
-        --set-upstream origin "${branch}"
+    exec git pull origin master --rebase \
+      && git push -f
 }
 
 main "${@}"

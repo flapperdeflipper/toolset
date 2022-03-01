@@ -25,6 +25,22 @@ function git::baseurl {
    printf "%s\n" "${url}"
 }
 
+
+function git::sanity {
+    local branch="${1}"; shift
+    local head_branch="${1}"; shift
+
+    if git::is_dirty
+    then
+        exit::error "Current workdir on ${branch} is dirty"
+    fi
+
+    if var::equals "${branch}" "${head_branch}"
+    then
+        exit::error "Thou shall not push to ${head_branch}!"
+    fi
+}
+
 function git::basedir {
     git rev-parse --show-toplevel
 }
