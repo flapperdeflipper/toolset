@@ -29,8 +29,6 @@ function main {
         usage
     fi
 
-    git::sanity
-
     local branch
           branch="$( git::branch )"
 

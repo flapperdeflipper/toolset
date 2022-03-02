@@ -37,8 +37,7 @@ function main {
 
     git::sanity "${branch}" "${head_branch}"
 
-    exec git pull origin master --rebase \
-      && git push -f
+    git pull origin master --rebase && git push -f
 }
 
 main "${@}"
