@@ -27,8 +27,8 @@ function git::baseurl {
 
 
 function git::sanity {
-    local branch="${1}"; shift
-    local head_branch="${1}"; shift
+    local branch="${1}"
+    local head_branch="${2}"
 
     if git::is_dirty
     then
