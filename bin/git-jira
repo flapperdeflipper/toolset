@@ -34,7 +34,7 @@ function main {
     local orgname
           orgname="$( < "${HOME}/.jira" )"
 
-    if ! git remote -v | grep -q "gitlab.com/${orgname}"
+    if ! git remote -v | grep -qE "gitlab.com.${orgname}"
     then
         exit::error "Not a work repository"
     fi
