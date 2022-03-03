@@ -50,6 +50,9 @@ function git::provider_uri {
                 --tags|-t)
                     printf -- "-/tags"
                     ;;
+                --branch|-b|--branches)
+                    printf -- "-/branches"
+                    ;;
                 --pipe|-ci)
                     printf -- "pipelines"
                     ;;

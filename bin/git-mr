@@ -61,7 +61,7 @@ function main {
           )"
     fi
 
-    exec git push \
+    command git push \
         --set-upstream origin "${branch}" \
         -o merge_request.create \
         -o merge_request.title="[${issue}] ${description}" \

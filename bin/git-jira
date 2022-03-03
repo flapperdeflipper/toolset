@@ -25,16 +25,66 @@ EOF
 }
 
 function main {
-    if ! var::eq "${#}" 0 \
-    || interact::usage "${@}"
+    local backlog=0
+    local board=0
+
+    local ORGNAME=""
+    local BOARD=""
+    local GROUP=""
+
+    while [[ "${1:-""}" != "" ]]
+    do
+        case "${1}" in
+            -h|--help)
+                usage
+            ;;
+            -b|--back|--backlog)
+                backlog=1
+                break
+            ;;
+            -kb|--kanban|--board)
+                board=1
+                break
+            ;;
+            *)
+                usage
+            ;;
+        esac
+    done
+
+    var::eq "$(( backlog + board ))" 2 \
+        && exit::error  "Use either --backlog or --board"
+
+    if ! fs::is_file "${HOME}/.jira"
     then
-        usage
+        exit::error "${HOME}/.jira containing orgname not found!"
     fi
 
-    local orgname
-          orgname="$( < "${HOME}/.jira" )"
+    ## Load jira config
+    source "${HOME}/.jira" || return 1
 
-    if ! git remote -v | grep -qE "gitlab.com.${orgname}"
+    if var::gt "$(( board + backlog ))" 1 \
+    && (   var::is_empty "${ORGNAME}" \
+        || var::is_empty "${BOARD}" \
+        || var::is_empty "${GROUP}" \
+       )
+    then
+        exit::error "Missing data in ${HOME}/.jira!"
+    fi
+
+    ## First check for shortcuts
+    if var::eq "${board}" 1
+    then
+        open "https://${ORGNAME}.atlassian.net/jira/software/c/projects/${GROUP}/boards/${BOARD}"
+        exit 0
+
+    elif var::eq "${backlog}" 1
+    then
+        open "https://${ORGNAME}.atlassian.net/jira/software/c/projects/${GROUP}/boards/${BOARD}/backlog?issueLimit=100"
+        exit 0
+    fi
+
+    if ! git remote -v | grep -qE "gitlab.com.${ORGNAME}"
     then
         exit::error "Not a work repository"
     fi
@@ -49,12 +99,7 @@ function main {
 
     local issue="${branch#feature/}"
 
-    if ! fs::is_file "${HOME}/.jira"
-    then
-        exit::error "${HOME}/.jira containing orgname not found!"
-    fi
-
-    open "https://${orgname}.atlassian.net/browse/${issue}"
+    command open "https://${ORGNAME}.atlassian.net/browse/${issue}"
 }
 
 main "${@}"
