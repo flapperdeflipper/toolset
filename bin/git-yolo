@@ -1,0 +1,47 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Push with a random commit message
+
+    ${TOOLSET_SCRIPT_NAME}
+
+   Arguments:
+    -h, --help  - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME}
+
+EOF
+
+    exit 0
+}
+
+function main {
+    if ! var::eq "${#}" 0 \
+    || interact::usage "${@}"
+    then
+        usage
+    fi
+
+    local branch
+          branch="$( git::branch )"
+
+    local head_branch
+          head_branch="$( git::head_branch )"
+
+    git::sanity "${branch}" "${head_branch}"
+
+    git add .
+    git commit -m "$(curl -s whatthecommit.com/index.txt)"
+
+    exec git push \
+        --set-upstream origin "${branch}"
+}
+
+main "${@}"
