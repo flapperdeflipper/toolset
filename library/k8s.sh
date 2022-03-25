@@ -346,7 +346,7 @@ function k8s::drain {
 
     log::info "Draining node ${node}"
 
-    if proc::log_action "kubectl drain ${node} --delete-local-data --ignore-daemonsets"
+    if proc::log_action "kubectl drain ${node} --delete-local-data --ignore-daemonsets --force"
     then
         return 0
     fi
