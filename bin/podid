@@ -38,7 +38,8 @@ function main {
 
     declare -r regex="${1:-""}"; shift
 
-    if interact::in_args "-ns --namespace" "${@}"
+    if interact::in_args "-ns " "${@}" \
+    || interact::in_args "--namespace" "${@}"
     then
         awkline='{ print $1 " " $2 }'
     else

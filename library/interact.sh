@@ -102,16 +102,13 @@ function interact::prompt_response {
 ##
 
 function interact::in_args {
-    local arguments="${1}";  shift
+    local argument="${1}";  shift
     local input="${*}"
 
-    for argument in ${arguments};
-    do
-        if var::matches "${input}" "${argument}"
-        then
-            return 0
-        fi
-    done
+    if var::matches "${input}" "${argument}"
+    then
+        return 0
+    fi
 
     return 1
 }
@@ -124,7 +121,8 @@ function interact::in_args {
 function interact::usage {
     local input="${*}"
 
-    if interact::in_args "-h --help" "${input}"
+    if interact::in_args ' -h' "${input}" \
+    || interact::in_args '--help' "${input}"
     then
         return 0
     fi
