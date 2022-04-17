@@ -96,6 +96,9 @@ function k8s::grep {
     local object="pods"
     local regex="."
 
+    local watch=0
+    local refresh=1
+
     ## Parse command line arguments
     while [ "${1:-""}" != "" ]
     do
@@ -112,6 +115,13 @@ function k8s::grep {
                 regex="${2}"
                 shift
             ;;
+            --watch)
+                watch=1
+            ;;
+            --refresh)
+                refresh="${2}"
+                shift
+            ;;
             *)
                 arguments="${arguments} ${1:-""} ${2:-""}"
                 shift
@@ -124,8 +134,14 @@ function k8s::grep {
     var::is_empty "${arguments}" && arguments=" --all-namespaces"
     var::equals "${wide}" "1"    && arguments="${arguments} -o wide"
 
-    # shellcheck disable=SC2086
-    command kubectl get "${object}" ${arguments} | grep -E "${regex}"
+    local cmd="kubectl get ${object} ${arguments}"
+
+    if var::eq "${watch}" 1
+    then
+        watch -n "${refresh}" "${cmd} | grep -E -- ${regex}"
+    else
+        ${cmd} | grep -E -- "${regex}"
+    fi
 }
 
 ##
