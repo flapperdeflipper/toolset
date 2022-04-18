@@ -5,7 +5,7 @@
 ##
 ## This is a wrapper script to use in scripts
 ## By setting a shebang for #!/usr/bin/env toolset,
-## You can use the libraries in libraries without need to
+## You can use the libraries in the libraries directorty without need to
 ## source or import them manually.
 ##
 
@@ -31,7 +31,7 @@ declare BASH_ARGV0="${1:-""}"
 ## Shift the first argument (the scriptname itself, which we've set to $0)
 shift
 
-## Set the path to the bin directory
+## Set the path to the toolset/bin directory
 declare TOOLSET_BIN_PATH="$( dirname "${BASH_SOURCE[0]}" )"
 
 ## Set the library path in our environment
@@ -80,7 +80,6 @@ if [[ "${-}" != *i* ]] \
 && [[ -z "${BATS_TEST_FILENAME:-""}" ]] \
 && ! shopt -q login_shell
 then
-
     # shellcheck source=/dev/null
     source "${TOOLSET_SCRIPT_PATH}"
 fi
