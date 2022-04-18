@@ -1,55 +1,84 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2154
 
 ##
-## Define import function
+## Check if a file can be sourced
 ##
+
+function core::is_sourceable {
+    local file="${1}"; shift
+
+    local filetype
+          filetype="$(
+            command file "${file}" \
+              | awk -F ': ' '{ print $2 }' \
+              | sed -e 's/\ \ /\ /g' \
+          )"
+
+    if [[ "${filetype}" =~ "toolset script" ]] \
+    || [[ "${filetype}" =~ "sh script" ]] \
+    || [[ "${filetype}" =~ "bash script" ]] \
+    || [[ "${filetype}" =~ "^Bourne-Again shell" ]] \
+    || [[ "${filetype}" =~ "^POSIX shell" ]] \
+    || [[ "${filetype}" =~ "^ASCII text" ]]
+    then
+        return 0
+    fi
+
+    return 1
+}
+
 
 function core::import {
-    local filename
-    local filepath
+    local source_file=""
 
-    local -ra names=("${@}")
+    local -ra input=("${@}")
 
     ## Loop over all files given as input
-    for file in "${names[@]}"
+    for file in "${input[@]}"
     do
-        ## Check if lib with file extension found in PATH
-        if ! filepath="$( which "${file}.sh" )"
+        ## Check if file.sh in library_path
+        if [[ -f "${TOOLSET_LIBRARY_PATH}/${file}.sh" ]]
         then
-            ## Otherwise check if file without extension is a script
-            if file "$( which "${file}" )" | grep -q 'shell script'
+            source_file="${TOOLSET_LIBRARY_PATH}/${file}.sh"
+
+        ## Check if file in library_path
+        elif [[ -f "${TOOLSET_LIBRARY_PATH}/${file}" ]]
+        then
+            source_file="${TOOLSET_LIBRARY_PATH}/${file}"
+
+        ##  Check if file is a full path to a file
+        elif [[ -f "${file}" ]] \
+        && core::is_sourceable "${file}"
+        then
+            source_file="${file}"
+
+        ## Check if file.sh is in path
+        elif which "${file}.sh" >/dev/null 2>&1
+        then
+            source_file="$( which "${file}.sh" )"
+
+        ## Check if file is in path
+        elif which "${file}" >/dev/null 2>&1
+        then
+            ## Check if file without extension is a script
+            if core::is_sourceable "$( which "${file}" )"
             then
-                ## If so, set as filepath
-                filepath="$( which "${file}" )"
+                ## If so, set as source_file
+                source_file="$( which "${file}" )"
             fi
         fi
 
-        ## If filepath doesn't exist, it doesn't exist as file or file.sh in PATH
-        if [[ ! -f "${filepath}" ]]
+        if [[ ! -f "${source_file}" ]]
         then
-            ## check if it's a full path that is given
-            if [[ -f "${file}" ]]
-            then
-                ## If so, set the basename and assume it's in library path
-                filename="$( basename "${file}" )"
-            else
-                ## if not, append file extension and assume it's in library path
-                filename="${file}.sh"
-            fi
-
-            filepath="${TOOLSET_LIBRARY_PATH}/${filename}"
-        fi
-
-        if [[ ! -f "${filepath}" ]]
-        then
-            echo "ERROR: ${FUNCNAME[*]}: Import failed: ${filename} not found!" > /dev/stderr
+            echo "ERROR: ${FUNCNAME[*]}: Import invalid: $( basename ${file} )" > /dev/stderr
             continue
         fi
 
         # shellcheck source=/dev/null
-        if ! source "${filepath}"
+        if ! source "${source_file}"
         then
-            echo "ERROR: ${FUNCNAME[*]}: Failed to source ${filepath}..." > /dev/stderr
+            echo "ERROR: ${FUNCNAME[*]}: Failed to source ${source_file}..." > /dev/stderr
             continue
         fi
     done
