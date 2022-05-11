@@ -43,6 +43,9 @@ function main {
     local -ar default_objects=(
         pods
         services
+        secrets
+        ingress
+        externalsecrets
         daemonsets
         deployments
         replicasets

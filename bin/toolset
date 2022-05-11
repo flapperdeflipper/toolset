@@ -28,8 +28,8 @@ declare TOOLSET_SCRIPT_NAME="$( basename "${TOOLSET_SCRIPT_PATH:-""}" )"
 ## Set $0 to the script itself
 declare BASH_ARGV0="${1:-""}"
 
-## Shift the first argument (the scriptname itself, which we've set to $0)
-shift
+## Shift the first argument if not empty (the scriptname itself, which we've set to $0)
+[[ "${#@}" -ne 0 ]] && shift
 
 ## Set the path to the toolset/bin directory
 declare TOOLSET_BIN_PATH="$( dirname "${BASH_SOURCE[0]}" )"

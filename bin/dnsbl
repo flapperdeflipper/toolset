@@ -223,8 +223,8 @@ EOF
 ## main
 ##
 function main {
-    if [[ "${#}" -ne 1 ]] \
-    || interact::usage "${@}"
+    if interact::usage "${@}" \
+    || [[ "${#}" != 1 ]]
     then
         usage
     fi

@@ -119,7 +119,7 @@ function interact::in_args {
 ##
 
 function interact::usage {
-    local input="${*}"
+    local input=" ${*}"
 
     if interact::in_args ' -h' "${input}" \
     || interact::in_args '--help' "${input}"
