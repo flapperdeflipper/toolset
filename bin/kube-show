@@ -2,7 +2,6 @@
 # vi: ft=bash
 # shellcheck shell=bash
 
-
 ## Print help output
 function usage {
     cat <<EOF
@@ -46,6 +45,9 @@ function main {
         secrets
         ingress
         externalsecrets
+        roles
+        rolebindings
+        serviceaccounts
         daemonsets
         deployments
         replicasets
@@ -80,7 +82,7 @@ function main {
         printf "%s\n" "${line}"
         printf "\n"
 
-        kubectl --namespace "${namespace}" get "${object}" -o wide
+        kubectl --namespace "${namespace}" get "${object}" -o wide || true
 
         printf "\n\n"
     done
