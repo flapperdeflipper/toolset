@@ -51,7 +51,7 @@ function var::is_false {
 
     local value="${1:-null}"
 
-    log::error "${FUNCNAME[0]}: Checking if value is false"
+    log::trace "${FUNCNAME[0]}: Checking if value is false"
 
     if [[ "${value}" == "false" ]] \
     || [[ "${value}" == 0 ]]
