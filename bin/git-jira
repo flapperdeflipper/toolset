@@ -27,6 +27,7 @@ EOF
 function main {
     local backlog=0
     local board=0
+    local show=0
 
     local ORGNAME=""
     local BOARD=""
@@ -37,6 +38,10 @@ function main {
         case "${1}" in
             -h|--help)
                 usage
+            ;;
+            -s|--show)
+                show=1
+                shift
             ;;
             -b|--back|--backlog)
                 backlog=1
@@ -72,15 +77,22 @@ function main {
         exit::error "Missing data in ${HOME}/.jira!"
     fi
 
+    if var::eq "${show}" 1
+    then
+        cmd="echo"
+    else
+        cmd="open"
+    fi
+
     ## First check for shortcuts
     if var::eq "${board}" 1
     then
-        open "https://${ORGNAME}.atlassian.net/jira/software/c/projects/${GROUP}/boards/${BOARD}"
+        exec "${cmd}" "https://${ORGNAME}.atlassian.net/jira/software/c/projects/${GROUP}/boards/${BOARD}"
         exit 0
 
     elif var::eq "${backlog}" 1
     then
-        open "https://${ORGNAME}.atlassian.net/jira/software/c/projects/${GROUP}/boards/${BOARD}/backlog?issueLimit=100"
+        exec "${cmd}" "https://${ORGNAME}.atlassian.net/jira/software/c/projects/${GROUP}/boards/${BOARD}/backlog?issueLimit=100"
         exit 0
     fi
 
@@ -99,7 +111,7 @@ function main {
 
     local issue="${branch#feature/}"
 
-    command open "https://${ORGNAME}.atlassian.net/browse/${issue}"
+    exec "${cmd}" "https://${ORGNAME}.atlassian.net/browse/${issue}"
 }
 
 main "${@}"
