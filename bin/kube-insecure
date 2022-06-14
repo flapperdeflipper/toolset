@@ -1,0 +1,55 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash disable=SC2154
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    List all securityContext and podSecurityContext for all pods in a cluster
+
+    ${TOOLSET_SCRIPT_NAME} [-h|--help]
+
+    Arguments:
+      -h, --help  - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME}
+
+EOF
+
+    exit 0
+}
+
+
+
+function main {
+    if var::gt "${#}" 1 \
+    || interact::usage "${@}"
+    then
+        usage
+    fi
+
+    local tmpfile="/tmp/go-template-${TOOLSET_SCRIPT_NAME}"
+
+    cat <<EOF > "${tmpfile}"
+{{- range .items }}
+    name: {{.metadata.name}}
+    kind: {{.metadata.ownerReferences}}
+    namespace: {{.metadata.namespace}}
+    podSecurityContext: {{ .spec.template.spec.securityContext}}
+    {{- range .spec.template.spec.containers }}
+    containername: {{.name}}
+    containerSecurityContext: {{.securityContext}}
+    {{- end -}}{{"\n"}}
+{{- end -}}
+EOF
+
+    if kubectl get deploy,ss -A -o go-template-file="${tmpfile}"
+    then
+        rm "${tmpfile}"
+    fi
+}
+
+main "${@}"

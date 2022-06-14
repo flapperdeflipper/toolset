@@ -36,6 +36,7 @@ function main {
 
     local region="${AWS_REGION:-"${AWS_DEFAULT_REGION:-"eu-west-1"}"}" ## Use eu-west-1 as default region
     local domain=""
+    local arguments=""
 
     ## Parse command line arguments
     while [ "${1:-""}" != "" ]
@@ -53,6 +54,10 @@ function main {
               region="${2:-""}"
               shift
         ;;
+        *)
+            arguments="${arguments} ${1:-""} ${2:-""}"
+            shift
+        ;;
         esac
 
         shift
@@ -65,7 +70,7 @@ function main {
 
     depends::check_list "jq" "aws" || return 1
 
-    if ! aws::ses::whitelist_domain "${domain}" "${region}"
+    if ! aws::ses::whitelist_domain "${domain}" "${region}" "${arguments}"
     then
         exit::error "Failed to setup SES for domain repo ${domain}"
     fi

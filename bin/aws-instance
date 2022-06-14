@@ -1,6 +1,6 @@
 #!/usr/bin/env toolset
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC2048
 
 ## Print help output
 function usage() {
@@ -25,7 +25,9 @@ function usage() {
       --reboot             - Reboot this instance
       --terminate          - Terminate this instance
       --tunnel             - Open a tunnel on a port to this instance
+      --session            - Start systems manager session
 
+      --profile            - Set the aws profile for cli
       --region             - The aws region to work in (default: eu-west-1)
       --dry-run            - Don't do, just fake it
 
@@ -44,6 +46,9 @@ function usage() {
 
       ## Info:
       ${TOOLSET_SCRIPT_NAME} --instance i-0f8d56785c4959883 --info
+
+      ## Session
+      ${TOOLSET_SCRIPT_NAME} --instance i-0f8d56785c4959883 --session
 
       ## Open web
       ${TOOLSET_SCRIPT_NAME} --instance i-0f8d56785c4959883 --web
@@ -74,6 +79,7 @@ function main() {
 
     local -i ssh=0
     local -i tunnel=0
+    local -i session=0
     local -i console=0
     local -i info=0
     local -i web=0
@@ -108,6 +114,10 @@ function main() {
             --tunnel)
                 tunnel=1
                 tunnel_ports="${2}"
+                shift
+            ;;
+            --session)
+                session=1
                 shift
             ;;
             --ssh)
@@ -152,7 +162,7 @@ function main() {
         shift || true
     done
 
-    total_arguments="$(( console + web + info + reboot + terminate + tunnel + ssh ))"
+    total_arguments="$(( console + web + info + reboot + terminate + tunnel + session + ssh ))"
 
     ## Exit if no instance given
     var::is_empty "${instance}" && usage
@@ -171,7 +181,7 @@ function main() {
     depends::check_list "jq" "aws" || exit 1
 
     ## Get instance id from aws
-    if ! instance_id="$( aws::ec2::instance_id "${instance}" )"
+    if ! instance_id="$( aws::ec2::instance_id "${instance}" "${arguments}" )"
     then
         exit::error "Invalid input for ${instance}: Instance input is not an id, not an internal ip and not a DNS name..."
     fi
@@ -189,12 +199,12 @@ function main() {
 
         if [[ "${tunnel}" -eq 1 ]]
         then
-            local_port="$( echo "${tunnel_ports}"  | cut -d: -f1 )"
-            remote_port="$( echo "${tunnel_ports}" | cut -d: -f2 )"
+            local_port="$(  cut -d: -f1 <<< "${tunnel_ports}" )"
+            remote_port="$( cut -d: -f2 <<< "${tunnel_ports}" )"
 
             log::info "Creating tunnel from ${local_port} to ${instance}:${remote_port}"
 
-            aws::ssm::tunnel "${instance}" "${local_port}" "${remote_port}"
+            aws::ssm::tunnel "${instance}" "${local_port}" "${remote_port}" "${arguments}"
 
             return $?
         else
@@ -210,12 +220,22 @@ function main() {
         fi
     fi
 
+    ## Session
+    if [[ "${session}" -eq 1 ]]
+    then
+        log::info "Retrieving ssm session for ${instance}"
+
+        ${dryrun} aws::ssm::session "${instance}" "${arguments}"
+
+        return "${?}"
+    fi
+
     ## Console
     if [[ "${console}" -eq 1 ]]
     then
         log::info "Retrieving terminal console for ${instance}"
 
-        ${dryrun} aws::ec2::console_output "${instance}"
+        ${dryrun} aws::ec2::console_output "${instance}" "${arguments}"
 
         return "${?}"
     fi
@@ -231,7 +251,7 @@ function main() {
             return 1
         fi
 
-        ${dryrun} aws::ec2::reboot "${instance}"
+        ${dryrun} aws::ec2::reboot "${instance}" "${arguments}"
 
         return "${?}"
     fi
@@ -247,7 +267,7 @@ function main() {
             return 1
         fi
 
-        ${dryrun} aws::ec2::terminate "${instance}" "${autoscaled}"
+        ${dryrun} aws::ec2::terminate "${instance}" "${autoscaled}" "${arguments}"
 
         return "${?}"
     fi
@@ -262,7 +282,7 @@ function main() {
     ## Show info on request
     if [ ${info} -eq 1 ]
     then
-        ${dryrun} aws::ec2::info "${instance}" "${region}"
+        ${dryrun} aws::ec2::info "${instance}" "${arguments}"
         return $?
     fi
 }

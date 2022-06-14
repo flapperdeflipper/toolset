@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC2048
 
 
 ##
@@ -23,21 +23,28 @@ function aws::cli {
 ################################################################################
 
 function aws::sts::caller_identity {
-    aws::cli sts get-caller-identity
+    local arguments=("${@}")
+    aws::cli sts get-caller-identity ${arguments[*]}
 }
 
 function aws::sts::user_id {
-    aws::sts::caller_identity \
+    local arguments=("${@}")
+
+    aws::sts::caller_identity ${arguments[*]} \
         | jq -r '.UserId'
 }
 
 function aws::sts::account_id {
-    aws::sts::caller_identity \
+    local arguments=("${@}")
+
+    aws::sts::caller_identity ${arguments[*]} \
         | jq -r '.Account'
 }
 
 function aws::sts::user_arn {
-    aws::sts::caller_identity \
+    local arguments=("${@}")
+
+    aws::sts::caller_identity ${arguments[*]} \
         | jq -r '.Arn'
 }
 
@@ -51,14 +58,16 @@ function aws::sts::user_arn {
 ##
 
 function aws::ec2::get_ip_for_instance {
-    local instance="${1}"
+    local instance="${1}"; shift
+    local arguments=("${@}")
 
     log::trace "${FUNCNAME[0]}: ${*} - Retrieving ip address for instance id ${instance}"
 
     if ! aws::cli ec2 describe-instances \
         --instance-ids "$instance" \
         --query "Reservations[*].Instances[*].[PrivateIpAddress]" \
-        --output=text
+        --output=text \
+        ${arguments[*]}
     then
         log::error "${FUNCNAME[0]}: Failed to run ec2 describe-instances for ${instance}"
         return 1
@@ -73,13 +82,15 @@ function aws::ec2::get_ip_for_instance {
 ##
 
 function aws::ec2::ip_to_id {
-    local instance="${1}"
+    local instance="${1}"; shift
+    local arguments=("${@}")
 
     log::trace "${FUNCNAME[0]}: ${*} - Retrieving instance id for ip address ${instance}"
 
     if ! aws::cli ec2 describe-instances \
             --query 'Reservations[].Instances[]' \
             --filters "Name=private-ip-address,Values=${instance}" \
+            ${arguments[*]} \
         | jq -r '.[0].InstanceId'
     then
         log::error "${FUNCNAME[0]}: Failed to run ec2 describe-instances for ${instance}"
@@ -95,13 +106,15 @@ function aws::ec2::ip_to_id {
 ##
 
 function aws::ec2::id_to_name {
-    local instance="${1}"
+    local instance="${1}"; shift
+    local arguments=("${@}")
 
     log::trace "${FUNCNAME[0]}: ${*} - Retrieving hostname for instance id ${instance}"
 
     if ! aws::cli ec2 describe-instances \
             --instance-ids "${instance}" \
             --query "Reservations[*].Instances[*].[PrivateDnsName]"  \
+            ${arguments[*]} \
         | jq -r '.[0][0][0]'
     then
         log::error "${FUNCNAME[0]}: Failed to run ec2 describe-instances for ${instance}"
@@ -117,13 +130,15 @@ function aws::ec2::id_to_name {
 ##
 
 function aws::ec2::name_to_id {
-    local instance="${1}"
+    local instance="${1}"; shift
+    local arguments=("${@}")
 
     log::trace "${FUNCNAME[0]}: ${*} - Retrieving instance id for hostname ${instance}"
 
     if ! aws::cli ec2 describe-instances \
             --query 'Reservations[].Instances[]' \
             --filters "Name=private-dns-name,Values=$instance" \
+            ${arguments[*]} \
         | jq -r '.[0].InstanceId'
     then
         log::error "${FUNCNAME[0]}: Failed to run ec2 describe-instances for ${instance}"
@@ -139,14 +154,15 @@ function aws::ec2::name_to_id {
 ##
 
 function aws::ec2::instance_id {
-    local instance="${1}"
+    local instance="${1}"; shift
+    local arguments=("${@}")
 
     log::trace "${FUNCNAME[0]}: ${*} - Retrieving the instance id for input ${instance}"
 
     if string::contains compute.internal "${instance}"
     then
         ## instance is an instance private dns name
-        aws::ec2::name_to_id "${instance}"
+        aws::ec2::name_to_id "${instance}" ${arguments[*]}
 
     elif string::startswith "i-" "${instance}"
     then
@@ -156,7 +172,7 @@ function aws::ec2::instance_id {
     elif net::is_ip4 "${instance}"
     then
         ## instance is an instance private ip address
-        aws::ec2::ip_to_id "${instance}"
+        aws::ec2::ip_to_id "${instance}" ${arguments[*]}
     else
         return 1
     fi
@@ -168,9 +184,10 @@ function aws::ec2::instance_id {
 ##
 
 function aws::ec2::console_output {
-    local instance="${1}"
+    local instance="${1}"; shift
+    local arguments=("${@}")
 
-    if ! instance_id="$( aws::ec2::instance_id "${instance}" )"
+    if ! instance_id="$( aws::ec2::instance_id "${instance}" ${arguments[*]} )"
     then
         log::error "${FUNCNAME[0]}: Invalid input for ${instance}: Input is not an id, not an internal ip and not a DNS name..."
         return 1
@@ -181,7 +198,8 @@ function aws::ec2::console_output {
     if ! aws::cli ec2 get-console-output \
         --instance-id "${instance_id}" \
         --latest \
-        --output text
+        --output text \
+        ${arguments[*]}
     then
         log::error "${FUNCNAME[0]}: Failed to retrieve console output for ${instance}"
         return 1
@@ -196,10 +214,11 @@ function aws::ec2::console_output {
 ##
 
 function aws::ec2::weblink {
-    local instance="${1}"
-    local region="${2:-"${AWS_REGION:-"${AWS_DEFAULT_REGION:-"eu-west-1"}"}"}" ## Use eu-west-1 as default region
+    local instance="${1}"; shift
+    local region="${1:-"${AWS_REGION:-"${AWS_DEFAULT_REGION:-"eu-west-1"}"}"}"; shift || true
+    local arguments=("${@}")
 
-    if ! instance_id="$( aws::ec2::instance_id "${instance}" )"
+    if ! instance_id="$( aws::ec2::instance_id "${instance}" ${arguments[*]} )"
     then
         log::error "${FUNCNAME[0]}: Invalid input for ${instance}: Input is not an id, not an internal ip and not a DNS name..."
         return 1
@@ -207,7 +226,7 @@ function aws::ec2::weblink {
 
     log::trace "${FUNCNAME[0]}: ${*} - Generating webconsole link for instance ${instance}"
 
-    printf "https://console.aws.amazon.com/ec2/v2/home?region=$region#Instances:search=%s;sort=instanceState" "${instance}"
+    printf "https://%s.console.aws.amazon.com/ec2/v2/home?region=%s#InstanceDetails:instanceId=%s" "${region}" "${region}" "${instance}"
 }
 
 
@@ -217,10 +236,12 @@ function aws::ec2::weblink {
 
 function aws::ec2::terminate {
     local instance="${1}"; shift
-    local autoscaled="${1}"
+    local autoscaled="${1}"; shift
+    local arguments=("${@}")
+
     local -a cmd
 
-    if ! instance_id="$( aws::ec2::instance_id "${instance}" )"
+    if ! instance_id="$( aws::ec2::instance_id "${instance}" ${arguments[*]} )"
     then
         log::error "${FUNCNAME[0]}: Invalid input for ${instance}: Input is not an id, not an internal ip and not a DNS name..."
         return 1
@@ -234,7 +255,9 @@ function aws::ec2::terminate {
             aws::cli ec2
             terminate-instances
             --instance-ids "${instance_id}"
+            "${arguments[*]}"
         )
+
     elif var::eq "${autoscaled}" 1
     then
         cmd=(
@@ -242,6 +265,7 @@ function aws::ec2::terminate {
             terminate-instance-in-auto-scaling-group
             --instance-id "${instance_id}"
             --no-should-decrement-desired-capacity
+            "${arguments[*]}"
         )
     else
         log::error "${FUNCNAME[0]}: Failed to determine if autoscaling group should be adjusted!"
@@ -263,9 +287,10 @@ function aws::ec2::terminate {
 ##
 
 function aws::ec2::reboot {
-    local instance="${1}"
+    local instance="${1}"; shift
+    local arguments=("${@}")
 
-    if ! instance_id="$( aws::ec2::instance_id "${instance}" )"
+    if ! instance_id="$( aws::ec2::instance_id "${instance}" ${arguments[*]} )"
     then
         log::error "${FUNCNAME[0]}: Invalid input for ${instance}: Input is not an id, not an internal ip and not a DNS name..."
         return 1
@@ -274,7 +299,8 @@ function aws::ec2::reboot {
     log::trace "${FUNCNAME[0]}: ${*} - Rebooting instance ${instance}"
 
     if ! aws::cli ec2 reboot-instances \
-         --instance-ids "$instance_id"
+         --instance-ids "$instance_id" \
+        ${arguments[*]}
     then
         log::error "${FUNCNAME[0]}: Failed to reboot instance ${instance}"
         return 1
@@ -288,7 +314,7 @@ function aws::ec2::reboot {
 ##
 
 function aws::ec2::list_spot {
-    if ! aws::cli ec2 describe-spot-instance-requests \
+    if ! aws::cli ec2 describe-spot-instance-requests ${arguments[*]} \
         | jq -r '
             # extract instances as a flat list.
             [.SpotInstanceRequests | .[]
@@ -319,9 +345,10 @@ function aws::ec2::list_spot {
 ##
 
 function aws::ec2::info {
-    local instance="${1}"
+    local instance="${1}"; shift
+    local arguments=("${@}")
 
-    if ! instance_id="$( aws::ec2::instance_id "${instance}" )"
+    if ! instance_id="$( aws::ec2::instance_id "${instance}" ${arguments[*]} )"
     then
         log::error "${FUNCNAME[0]}: Invalid input for ${instance}: Input is not an id, not an internal ip and not a DNS name..."
         return 1
@@ -331,7 +358,8 @@ function aws::ec2::info {
 
     if ! aws::cli ec2 describe-instances \
         --instance-ids "${instance}" \
-        --output=table
+        --output=table \
+        ${arguments[*]}
     then
         log::error "${FUNCNAME[0]}: Failed to run ec2 describe-instances for ${instance}"
         return 1
@@ -350,9 +378,10 @@ function aws::ec2::info {
 ##
 
 function aws::ssm::list {
-    local instance="${1}"
+    local instance="${1}"; shift
+    local arguments=("${@}")
 
-    if ! instance_id="$( aws::ec2::instance_id "${instance}" )"
+    if ! instance_id="$( aws::ec2::instance_id "${instance}" ${arguments[*]} )"
     then
         log::error "${FUNCNAME[0]}: ${*} - Invalid input for ${instance}: Input is not an id, not an internal ip and not a DNS name..."
         return 1
@@ -362,13 +391,40 @@ function aws::ssm::list {
 
     if ! aws ssm describe-instance-information \
         --query "InstanceInformationList[*].{Name:ComputerName,Id:InstanceId,IPAddress:IPAddress}" \
-        --output text
+        --output text \
+        ${arguments[*]}
     then
         log::error "${FUNCNAME[0]}: Failed to run ssm describe-instance-information"
         return 1
     fi
 
     return 0
+}
+
+##
+## Setup session
+##
+
+function aws::ssm::session {
+    local instance="${1}"; shift
+    local arguments=("${@}")
+
+    if ! instance_id="$( aws::ec2::instance_id "${instance}" ${arguments[*]} )"
+    then
+        log::error "${FUNCNAME[0]}: Invalid input for ${instance}: Input is not an id, not an internal ip and not a DNS name..."
+        return 1
+    fi
+
+    log::trace "${FUNCNAME[0]}: ${*} - Opening ssm session to instance ${instance}"
+
+    if ! aws::cli ssm start-session \
+            --target "${instance}" \
+            --document-name SSM-SessionManagerRunShell \
+            ${arguments[*]}
+    then
+        log::error "${FUNCNAME[0]}: Failed to create ssm session for ${instance}"
+        return 1
+    fi
 }
 
 ##
@@ -379,7 +435,7 @@ function aws::ssm::ssh {
     local instance="${1}"; shift
     local arguments=("${@}")
 
-    if ! instance_id="$( aws::ec2::instance_id "${instance}" )"
+    if ! instance_id="$( aws::ec2::instance_id "${instance}" ${arguments[*]} )"
     then
         log::error "${FUNCNAME[0]}: Invalid input for ${instance}: Input is not an id, not an internal ip and not a DNS name..."
         return 1
@@ -388,8 +444,7 @@ function aws::ssm::ssh {
     log::trace "${FUNCNAME[0]}: ${*} - Opening ssh session to instance ${instance}"
 
     ssh "${instance_id}" \
-        -o ProxyCommand="bash -c \"aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters 'portNumber=%p'\"" \
-        "${arguments[@]}"
+        -o ProxyCommand="bash -c \"aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters 'portNumber=%p' ${arguments[*]}\""
 }
 
 
@@ -401,7 +456,7 @@ function aws::ssm::scp {
     local instance="${1}"
     local arguments=("${*:2}")
 
-    if ! instance_id="$( aws::ec2::instance_id "${instance}" )"
+    if ! instance_id="$( aws::ec2::instance_id "${instance}" ${arguments[*]} )"
     then
         log::error "${FUNCNAME[0]}: Invalid input for ${instance}: Input is not an id, not an internal ip and not a DNS name..."
         return 1
@@ -410,8 +465,7 @@ function aws::ssm::scp {
     log::trace "${FUNCNAME[0]}: ${*} - Secure copy-ing to instance ${instance} with arguments ${arguments[*]}"
 
     scp "${instance_id}" \
-        -o ProxyCommand="bash -c \"aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters 'portNumber=%p'\"" \
-        "${arguments[@]}"
+        -o ProxyCommand="bash -c \"aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters 'portNumber=%p' ${arguments[*]}\""
 }
 
 
@@ -420,11 +474,12 @@ function aws::ssm::scp {
 ##
 
 function aws::ssm::tunnel {
-    local instance="${1}"
-    local local_port="${2}"
-    local remote_port="${3}"
+    local instance="${1}"; shift
+    local local_port="${1}"; shift
+    local remote_port="${1}"; shift
+    local arguments=("${@}")
 
-    if ! instance_id="$( aws::ec2::instance_id "${instance}" )"
+    if ! instance_id="$( aws::ec2::instance_id "${instance}" ${arguments[*]} )"
     then
         log::error "${FUNCNAME[0]}: Invalid input for ${instance}: Input is not an id, not an internal ip and not a DNS name..."
         return 1
@@ -436,7 +491,8 @@ function aws::ssm::tunnel {
         --target "${instance_id}" \
         --document-name AWS-StartPortForwardingSession \
         --parameters \
-            "{\"portNumber\":[\"${remote_port}\"],\"localPortNumber\":[\"${local_port}\"]}"
+            "{\"portNumber\":[\"${remote_port}\"],\"localPortNumber\":[\"${local_port}\"]}" \
+        ${arguments[*]}
     then
         log::error "${FUNCNAME[0]}: Failed to create ssm session for ${instance}"
         return 1
@@ -451,10 +507,11 @@ function aws::ssm::tunnel {
 ##
 
 function aws:ssm::run_command {
-    local instance="${1}"
-    local command="${2}"
+    local instance="${1}"; shift
+    local command="${1}"; shift
+    local arguments=("${@}")
 
-    if ! instance_id="$( aws::ec2::instance_id "${instance}" )"
+    if ! instance_id="$( aws::ec2::instance_id "${instance}" ${arguments[*]} )"
     then
         log::error "${FUNCNAME[0]}: Invalid input for ${instance}: Input is not an id, not an internal ip and not a DNS name..."
         return 1
@@ -466,7 +523,8 @@ function aws:ssm::run_command {
         --instance-ids "${instance_id}" \
         --document-name "AWS-RunShellScript" \
         --parameters commands="${command}" \
-        --output text
+        --output text \
+        ${arguments[*]}
     then
         log::error "${FUNCNAME[0]}: Failed to run command for ${instance}"
         return 1
@@ -506,13 +564,15 @@ EOF
 }
 
 function aws::ses::whitelist_domain {
-    local domain="${1}"
-    local region="${2:-"${AWS_REGION:-"${AWS_DEFAULT_REGION:-"eu-west-1"}"}"}" ## Use eu-west-1 as default region
+    local domain="${1}"; shift
+    local arguments=("${@}")
     local output
 
-    if ! output="$( aws::cli ses verify-domain-identity \
-                    --domain "${domain}" \
-                    --region "${region}" )"
+    if ! output="$(
+        aws::cli ses verify-domain-identity \
+            --domain "${domain}" \
+            ${arguments[*]} \
+        )"
     then
         log::error "${FUNCNAME[0]}: Failed to create SES validation for domain ${domain}"
         return 1
@@ -543,7 +603,9 @@ function aws::ses::whitelist_domain {
 ##
 
 function aws::ecr::list_repos {
-    aws::cli ecr describe-repositories \
+    local arguments=("${@}")
+
+    aws::cli ecr describe-repositories ${arguments[*]} \
         | jq -r '.repositories[] | [.repositoryName, .repositoryUri] | @tsv' \
         | column -t
 }
@@ -554,12 +616,12 @@ function aws::ecr::list_repos {
 ##
 
 function aws::ecr::list_tags {
-    local registry="${1}"
-    local region="${2:-"${AWS_REGION:-"${AWS_DEFAULT_REGION:-"eu-west-1"}"}"}" ## Use eu-west-1 as default region
+    local registry="${1}"; shift
+    local arguments=("${@}")
 
     local account_id
 
-    if ! account_id="$( aws::sts::account_id )"
+    if ! account_id="$( aws::sts::account_id ${arguments[*]} )"
     then
         log::error "${FUNCNAME[0]}: Failed to get current account ID from aws"
         return 1
@@ -567,7 +629,9 @@ function aws::ecr::list_tags {
 
     local arn="arn:aws:ecr:${region}:${account_id}:repository/${registry}"
 
-    if ! aws::cli ecr list-tags-for-resource --resource-arn="${arn}"
+    if ! aws::cli ecr list-tags-for-resource \
+        --resource-arn="${arn}" \
+        ${arguments[*]}
     then
         log::error "${FUNCNAME[0]}: Failed to get tags for ${registry}"
         return 1
@@ -580,15 +644,16 @@ function aws::ecr::list_tags {
 ##
 
 function aws::ecr::list_findings {
-    local registry="${1}"
-    local tag="${2:-master}"
+    local registry="${1}"; shift
+    local tag="${1:-master}"; shift || true
+    local arguments=("${@}")
 
     if ! aws::cli ecr describe-image-scan-findings \
         --repository-name "${registry}" \
-        --image-id "imageTag=${tag}"
+        --image-id "imageTag=${tag}" \
+        ${arguments[*]}
     then
-        log::error "${FUNCNAME[0]}: Failed to retrieve ECR findings for
-        ${registry}:${tag}"
+        log::error "${FUNCNAME[0]}: Failed to retrieve ECR findings for ${registry}:${tag}"
         return 1
     fi
 }
