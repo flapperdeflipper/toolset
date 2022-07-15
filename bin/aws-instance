@@ -134,7 +134,6 @@ function main() {
             --ssh)
                 ssh=1
             ;;
-
             --ssh-key)
                 ssh_key=1
                 ssh_keyfile="${2}"
@@ -166,7 +165,7 @@ function main() {
                 terminate=1
             ;;
 
-            -n|--not-autoscaled)
+            --not-autoscaled)
                 autoscaled=0
             ;;
 
@@ -227,7 +226,7 @@ function main() {
 
             log::info "Creating tunnel from ${local_port} to ${instance}:${remote_port}"
 
-            aws::ssm::tunnel "${instance}" "${local_port}" "${remote_port}" "${arguments}"
+            ${dryrun} aws::ssm::tunnel "${instance}" "${local_port}" "${remote_port}" "${arguments}"
 
             return $?
         else

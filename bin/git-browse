@@ -74,6 +74,9 @@ function git::provider_uri {
                 --cr|--registry|-r)
                     printf -- "container_registry"
                     ;;
+                --root)
+                    printf -- ""
+                    ;;
                 --issues|-i)
                     printf -- "-/issues"
                     ;;
