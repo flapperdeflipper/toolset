@@ -32,10 +32,10 @@ function main {
     local branch
           branch="$( git::branch )"
 
-    local head_branch
-          head_branch="$( git::head_branch )"
+    local default_branch
+          default_branch="$( git::default_branch )"
 
-    git::sanity "${branch}" "${head_branch}"
+    git::sanity "${branch}" "${default_branch}"
 
     exec git push \
         --set-upstream origin "${branch}"

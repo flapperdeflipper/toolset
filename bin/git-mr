@@ -47,10 +47,10 @@ function main {
     local branch
           branch="$( git::branch )"
 
-    local head_branch
-          head_branch="$( git::head_branch )"
+    local default_branch
+          default_branch="$( git::default_branch )"
 
-    git::sanity "${branch}" "${head_branch}"
+    git::sanity "${branch}" "${default_branch}"
 
     local issue="${branch#feature/}"
 
@@ -66,7 +66,7 @@ function main {
         -o merge_request.create \
         -o merge_request.title="[${issue}] ${description}" \
         -o merge_request.description="[${issue}] ${description}" \
-        -o merge_request.target="${head_branch}"
+        -o merge_request.target="${default_branch}"
 }
 
 main "${@}"

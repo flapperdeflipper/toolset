@@ -28,16 +28,16 @@ function git::baseurl {
 
 function git::sanity {
     local branch="${1}"
-    local head_branch="${2}"
+    local default_branch="${2}"
 
     if git::is_dirty
     then
         exit::error "Current workdir on ${branch} is dirty"
     fi
 
-    if var::equals "${branch}" "${head_branch}"
+    if var::equals "${branch}" "${default_branch}"
     then
-        exit::error "Thou shall not push to ${head_branch}!"
+        exit::error "Thou shall not push to ${default_branch}!"
     fi
 }
 
@@ -50,7 +50,7 @@ function git::branch {
 }
 
 
-function git::head_branch {
+function git::default_branch {
     git remote show origin \
         | grep 'HEAD branch:' \
         | awk '{print $NF}'
