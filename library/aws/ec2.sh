@@ -16,7 +16,7 @@ function aws::ec2::query_instances {
 
     log::trace "${FUNCNAME[0]}: ${*} - Retrieving instance id ${instance}"
 
-    if ! aws::cli ec2 describe-instances --query "${query}" "${arguments[*]}"
+    if ! aws::cli ec2 describe-instances --query "${query}" ${arguments[*]}
     then
         log::error "${FUNCNAME[0]}: Failed to run ec2 describe-instances with query ${query}"
         return 1
@@ -82,7 +82,7 @@ function aws::ec2::ip_to_id {
     log::trace "${FUNCNAME[0]}: ${*} - Retrieving instance id for ip address ${ip_address}"
 
     if ! aws::ec2::query_instances 'Reservations[].Instances[]' \
-        --filters "Name=private-ip-address,Values=${ip_address}" \
+        --filter "Name=private-ip-address,Values=${ip_address}" \
         ${arguments[*]} \
         | jq -r '.[0].InstanceId'
     then
@@ -128,7 +128,7 @@ function aws::ec2::name_to_id {
     log::trace "${FUNCNAME[0]}: ${*} - Retrieving instance id for hostname ${hostname}"
 
     if ! aws::ec2::query_instances 'Reservations[].Instances[]' \
-        --filters "Name=private-dns-name,Values=$hostname" \
+        --filter "Name=private-dns-name,Values=$hostname" \
         ${arguments[*]} \
         | jq -r '.[0].InstanceId'
     then

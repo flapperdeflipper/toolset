@@ -83,7 +83,7 @@ function main {
         # get subnets
         subnets="$( \
             aws ec2 --region ${region} \
-                describe-subnets --filters Name=vpc-id,Values=${vpc} \
+                describe-subnets --filter Name=vpc-id,Values=${vpc} \
             | jq -r .Subnets[].SubnetId \
         )"
 

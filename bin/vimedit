@@ -34,7 +34,7 @@ function existsfilter {
     local -a files
     while read -r line
     do
-        if fs::is_file "${line}"
+        if fs::exists "${line}"
         then
             files+=("${line}")
         fi
