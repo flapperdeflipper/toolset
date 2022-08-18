@@ -202,7 +202,8 @@ function main() {
     depends::check_list "jq" "aws" || exit 1
 
     ## Get instance id from aws
-    if ! instance_id="$( aws::ec2::instance_id "${instance}" "${arguments}" )"
+    if ! instance_id="$( aws::ec2::instance_id "${instance}" "${arguments}" )" \
+    || [[ -z "${instance_id}" ]]
     then
         exit::error "Invalid input for ${instance}: Instance input is not an id, not an internal ip and not a DNS name..."
     fi
@@ -310,14 +311,14 @@ function main() {
     ## Show web console on request
     if var::eq "${web}" 1
     then
-        ${dryrun} open "$( aws::ec2::weblink "${instance}" "${region}" )"
+        ${dryrun} open "$( aws::ec2::weblink "${instance_id}" "${region}" )"
         return $?
     fi
 
     ## Show info on request
     if var::eq "${info}" 1
     then
-        ${dryrun} aws::ec2::info "${instance}" "${arguments}"
+        ${dryrun} aws::ec2::info "${instance_id}" "${arguments}"
         return $?
     fi
 }

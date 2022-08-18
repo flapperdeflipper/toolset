@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash disable=SC2048
+# shellcheck shell=bash disable=SC2048,SC2068
 
 ################################################################################
 ## EC2                                                                        ##
@@ -39,7 +39,7 @@ function aws::ec2::query_instance_status {
 
     if ! aws::cli ec2 describe-instance-status \
         --query "${query}" \
-        "${arguments[*]}"
+        ${arguments[*]}
     then
         log::error "${FUNCNAME[0]}: Failed to run ec2 describe-instances with query ${query}"
         return 1
@@ -246,7 +246,7 @@ function aws::ec2::terminate {
             aws::cli ec2
             terminate-instances
             --instance-ids "${instance_id}"
-            "${arguments[*]}"
+            "${arguments[@]}"
         )
 
     elif var::eq "${autoscaled}" 1
@@ -256,14 +256,14 @@ function aws::ec2::terminate {
             terminate-instance-in-auto-scaling-group
             --instance-id "${instance_id}"
             --no-should-decrement-desired-capacity
-            "${arguments[*]}"
+            "${arguments[@]}"
         )
     else
         log::error "${FUNCNAME[0]}: Failed to determine if autoscaling group should be adjusted!"
         return 1
     fi
 
-    if ! "${cmd[@]}"
+    if ! ${cmd[*]}
     then
         log::error "${FUNCNAME[0]}: Failed to terminate instance ${instance}"
         return 1
@@ -339,7 +339,8 @@ function aws::ec2::info {
     local instance="${1}"; shift
     local arguments=("${@}")
 
-    if ! instance_id="$( aws::ec2::instance_id "${instance}" ${arguments[*]} )"
+    if ! instance_id="$( aws::ec2::instance_id "${instance}" ${arguments[*]} )" \
+    || [[ -z "${instance_id}" ]]
     then
         log::error "${FUNCNAME[0]}: Invalid input for ${instance}: Input is not an id, not an internal ip and not a DNS name..."
         return 1
@@ -379,7 +380,7 @@ function aws::ec2::get_az {
         "${instance_id}" \
         "InstanceStatuses[*].AvailabilityZone" \
         --output=text \
-        "${arguments[@]}" \
+        ${arguments[@]} \
         | jq -r '.[0]'
     then
         log::error "${FUNCNAME[0]}: Failed to retrieve availability zone for ${instance}"
@@ -405,7 +406,7 @@ function aws::ec2::push_public_key {
         return 1
     fi
 
-    if ! availability_zone="$( aws::ec2::get_az "${instance_id}" "${arguments[*]}" )"
+    if ! availability_zone="$( aws::ec2::get_az "${instance_id}" ${arguments[*]} )"
     then
         log::error "${FUNCNAME[0]}: Failed to get availability zone for instance ${instance}"
         return 1
@@ -418,7 +419,7 @@ function aws::ec2::push_public_key {
          --availability-zone "${availability_zone}" \
          --instance-os-user "${username}" \
          --ssh-public-key "file://${pubkey}" \
-         "${arguments[@]}"
+         ${arguments[@]}
     then
         log::error "${FUNCNAME[0]}: Failed to push public key for ec2-instance-connect instance ${instance}"
         return 1
