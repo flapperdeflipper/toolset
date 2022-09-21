@@ -48,6 +48,7 @@ function main {
     # shellcheck disable=SC2046,SC2068
     files=$( \
         grep -s ${cmd[@]} \
+        | grep -v '\.git/' \
         | cut -d: -f1  \
         | sort -u \
         | xargs \
