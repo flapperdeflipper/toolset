@@ -23,7 +23,7 @@ EOF
 }
 
 function main {
-    if ! var::eq "${#}" 0 \
+    if ! var::ge "${#}" 0 \
     || interact::usage "${@}"
     then
         usage
@@ -37,8 +37,20 @@ function main {
 
     git::sanity "${branch}" "${default_branch}"
 
-    exec git push \
+    local -a cmd=(
+        git push \
         --set-upstream origin "${branch}"
+    )
+
+    if [[ "${*}" =~ --mr ]]
+    then
+        cmd+=(
+          -o merge_request.create \
+          -o merge_request.target="${default_branch}"
+        )
+    fi
+
+    exec "${cmd[@]}"
 }
 
 main "${@}"
