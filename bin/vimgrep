@@ -48,11 +48,11 @@ function main {
     # shellcheck disable=SC2046,SC2068
     files=$( \
         grep -Is ${cmd[@]} \
-        | grep -v '\.git/' \
+        | grep -v '/\.git/' \
         | cut -d: -f1  \
         | sort -u \
         | xargs \
-    ) || true
+    )
 
     if var::has_value "${files}"
     then

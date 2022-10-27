@@ -40,7 +40,8 @@ function git::sanity {
         exit::error "Current workdir on ${branch} is dirty"
     fi
 
-    if var::equals "${branch}" "${default_branch}"
+    if var::equals "${branch}" "${default_branch}" \
+    && [[ "${#}" =~ fipo|mr|yolo|retag ]]
     then
         exit::error "Thou shall not push to ${default_branch}!"
     fi

@@ -23,7 +23,7 @@ EOF
 }
 
 function main {
-    if ! var::eq "${#}" 0 \
+    if ! var::le "${#}" 1 \
     || interact::usage "${@}"
     then
         usage
@@ -37,7 +37,12 @@ function main {
 
     git::sanity "${branch}" "${default_branch}"
 
-    exec git checkout "${default_branch}"
+    git checkout "${default_branch}"
+
+    if [[ "${*}" =~ --pull ]]
+    then
+        git pull origin "${default_branch}"
+    fi
 }
 
 main "${@}"
