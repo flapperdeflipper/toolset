@@ -43,11 +43,18 @@ function main {
 
     cmd=(
         curl \
+        -qs \
         -N \
         -H 'Content-Type: application/json'
         -X "${method}"
         "${es_host}${url}"
     )
+
+    if [[ -n "${ES_PASSWORD}" ]] \
+    && [[ -n "${ES_USERNAME}" ]]
+    then
+        cmd+=(--user "${ES_USERNAME}:${ES_PASSWORD}")
+    fi
 
     if [[ -n "${data}" ]]
     then
@@ -66,7 +73,7 @@ function main {
         exit::info "${cmd[*]}"
     fi
 
-    command ${cmd[*]}
+    exec command "${cmd[@]}"
 
     echo
 }

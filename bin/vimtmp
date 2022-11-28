@@ -37,11 +37,16 @@ function main {
     local -r name="${1:-""}"
     local filename
 
+    if [[ ! -d "${HOME}/.tmp" ]]
+    then
+        mkdir -p "${HOME}/.tmp"
+    fi
+
     if var::is_empty "${name}"
     then
-        filename="$( mktemp )"
+        filename="$( mktemp -p "${HOME}/.tmp" )"
     else
-        filename="/tmp/${name}.$(date +'%Y%m%d%H%M%S')"
+        filename="${HOME}/.tmp/${name}.$(date +'%Y%m%d%H%M%S')"
     fi
 
     vim "${filename}"
