@@ -7,9 +7,9 @@
 function usage {
     cat <<EOF
 
-    Grep k8s nodes matching a regex
+    Grep k8s pods matching a regex
 
-    This script can be used to find nodes on a k8s cluster that are
+    This script can be used to find pods on a k8s cluster that are
     matching a given regex.
 
     ${TOOLSET_SCRIPT_NAME} <regex> [<options>]
@@ -35,20 +35,14 @@ function main {
 
     # shellcheck disable=SC2086,SC2001
     local -r regex="${1}"; shift
-    local arguments="${*}"
 
-    if var::is_empty "${arguments}"
-    then
-        arguments=" -o wide"
-    fi
-
-    k8s::grep \
-        --object node \
-        --regex "${regex}" \
-        --no-headers \
-        --label-columns worker-group,node.kubernetes.io/lifecycle,topology.kubernetes.io/zone,node.kubernetes.io/instance-type \
-        ${arguments}
-
+    podgrep "${regex}" \
+        | awk '{print $1 " "$2 " "$8}' \
+        | while read ns pod node
+    do
+        log::info "pod: ${pod}  ns: $ns"
+        nodegrep "${node}"
+    done
 }
 
 main "${@}"

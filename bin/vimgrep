@@ -35,8 +35,8 @@ function main {
     fi
 
     declare -r regex="${1:-""}"
-    declare -r arguments="${2:--R -E}"
-    declare -r directory="${3:-.}"
+    declare -r directory="${2:-.}"
+    declare -r arguments="${3:--R -E}"
     declare files
 
     declare -a cmd=(

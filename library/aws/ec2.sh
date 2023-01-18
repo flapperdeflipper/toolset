@@ -238,7 +238,7 @@ function aws::ec2::terminate {
         return 1
     fi
 
-    log::trace "${FUNCNAME[0]}: ${*} - Terminating instance ${instance} (autoscaled=${autoscaled})"
+    log::info "${FUNCNAME[0]}: ${*} - Terminating instance ${instance} (autoscaled=${autoscaled})"
 
     if var::eq "${autoscaled}" 0
     then

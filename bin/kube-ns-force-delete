@@ -1,0 +1,65 @@
+#!/usr/bin/env toolset
+# vi: ft=bash
+# shellcheck shell=bash
+
+
+## Print help output
+function usage {
+    cat <<EOF
+
+    Force delete a namespace
+
+    ${TOOLSET_SCRIPT_NAME} <namespace>
+
+   Arguments:
+    -h, --help  - Show this menu
+
+    Example:
+      ${TOOLSET_SCRIPT_NAME} <namespace>
+
+EOF
+
+    exit 0
+}
+
+
+function main {
+    if var::lt "${#}" 1 \
+    || interact::usage "${@}"
+    then
+        usage
+    fi
+
+    local namespace="${1:-""}"
+
+    if var::matches "${namespace}" "kube-"
+    then
+        exit::error "Node does matches kube-"
+    fi
+
+    log::info "removing ${namespace}"
+
+    if ! interact::prompt_bool
+    then
+        exit::warning "Action canceled!"
+    fi
+
+    local ns_json
+          ns_json="$( kubectl get namespace "${namespace}" -o json )"
+
+    printf '%s' "${ns_json}" \
+        | tr '\r\n' ' ' \
+        | jq -r -e '.spec.finalizers = []' \
+        | kubectl \
+            replace \
+            --raw "/api/v1/namespaces/${namespace}/finalize" \
+            -f -
+}
+
+
+main "${@}"
+
+
+
+
+
