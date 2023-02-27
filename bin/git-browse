@@ -12,6 +12,9 @@ function usage() {
     of a corresponding local git repository.
 
     Arguments:
+        generic)
+                --jira             - Show jira issue based on branch
+
         gitlab)
                 --pipe|-ci         - Show pipelines
                 --ci-visual|-v     - Show ci visualization
@@ -80,6 +83,7 @@ function git::provider_uri {
                 --issues|-i)
                     printf -- "-/issues"
                     ;;
+
                 *)
                     var::equals "${arguments}" "--master" && branch="master"
 
@@ -162,6 +166,13 @@ function main {
 
     local branch
           branch="$( git::branch )"
+
+    if [[ "${input}" == "--jira" ]] \
+    || [[ "${input}" == "-j"     ]]
+    then
+        exec git-jira
+        exit "${?}"
+    fi
 
     if var::matches "${baselink}" "github"
     then
