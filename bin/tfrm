@@ -51,10 +51,10 @@ function main {
     fi
 
     log::info "Recursively removing .terraform directories"
-    find "${directory}" -type d -name '.terraform' -exec rm -rvf {} \;
+    find "${directory}" -type d -name '.terraform' -exec rm -rf {} +
 
     log::info "Recursively removing .terraform.lock.hcl files"
-    find "${directory}" -type f -name '.terraform.lock.hcl' -exec rm -v {} \;
+    find "${directory}" -type f -name '.terraform.lock.hcl' -exec rm {} +
 }
 
 main "${@}"

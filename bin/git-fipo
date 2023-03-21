@@ -12,6 +12,8 @@ function usage {
     ${TOOLSET_SCRIPT_NAME}
 
    Arguments:
+    --mr        - Create a merge request
+
     -h, --help  - Show this menu
 
     Example:
