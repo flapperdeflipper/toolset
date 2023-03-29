@@ -32,8 +32,8 @@ function main {
         usage
     fi
 
-    find . -follow -type f -name '*\.pyc' -exec rm -v {} \;
-    find . -follow -type d -name '__pycache__' -exec rm -rvf {} \;
+    find . -follow -type f -name '*\.pyc' -exec rm -v {} +
+    find . -follow -type d -name '__pycache__' -exec rm -rvf {} +
 }
 
 main "${@}"
