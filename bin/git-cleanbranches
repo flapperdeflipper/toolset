@@ -40,7 +40,7 @@ function main {
     git pull --prune \
       && git branch --merged \
        | grep -v -E "(^\*|master|main|dev)" \
-       | xargs git branch -d
+       | xargs --no-run-if-empty git branch -D {}
 
     return 0
 }
