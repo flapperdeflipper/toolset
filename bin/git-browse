@@ -162,15 +162,9 @@ function main {
     then
           uri="$( git::provider_uri "gitlab" "${branch}" "${input}" )"
 
-    elif var::matches "${baselink}" "bitbucket"
-    then
-          uri="$( git::provider_uri "bitbucket" "${branch}" "${input}" )"
-
     else
           exit::error "Failed to determine git provider"
     fi
-
-    echo $uri
 
     /usr/bin/open "${baselink}/${uri}"
 
