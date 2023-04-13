@@ -71,6 +71,9 @@ function git::provider_uri {
                 --mr|--pr|-p)
                     printf -- "merge_requests"
                     ;;
+                --mymr)
+                    printf -- "merge_requests?scope=all&state=opened&author_username=${GIT_USERNAME:-}"
+                    ;;
                 --ci|--config|-c)
                     printf -- "-/settings/ci_cd"
                     ;;
@@ -111,29 +114,6 @@ function git::provider_uri {
                     ;;
                 --issues|-i)
                     printf "issues"
-                    ;;
-                *)
-                    printf ""
-                    ;;
-            esac
-            ;;
-
-         bitbucket)
-            case "${arguments}" in
-                --pipe|-a)
-                    printf "addon/pipelines/home"
-                    ;;
-                --mr|--pr|-p)
-                    printf "pull-requests/"
-                    ;;
-                --ci|--config|-c)
-                    printf "addons/pipelines/settings"
-                    ;;
-                --cr|--registry|-r)
-                    printf ""
-                    ;;
-                --issues|-i)
-                    printf "jira?statuses=new&statuses=indeterminate&sort=-updated&page=1"
                     ;;
                 *)
                     printf ""
@@ -189,6 +169,8 @@ function main {
     else
           exit::error "Failed to determine git provider"
     fi
+
+    echo $uri
 
     /usr/bin/open "${baselink}/${uri}"
 
