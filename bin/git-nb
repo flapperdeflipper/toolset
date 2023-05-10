@@ -37,7 +37,12 @@ function main {
 
     if git::is_dirty
     then
-        exit::error "Current workdir on ${branch} is dirty"
+        log::warning "Current workdir on ${branch} is dirty: Stashing changes"
+    fi
+
+    if ! git stash
+    then
+        exit::error "Failed to stash current changes"
     fi
 
     local default_branch
@@ -51,7 +56,8 @@ function main {
 
     local issue="${input##*/}"
 
-    exec git checkout -b "feature/${issue}"
+    git checkout -b "feature/${issue}"
+    git stash pop
 }
 
 main "${@}"

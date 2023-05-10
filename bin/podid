@@ -36,7 +36,7 @@ function main {
         usage
     fi
 
-    declare -r regex="${1:-""}"; shift
+    local -r regex="${1:-""}"; shift
 
     if interact::in_args "-ns " "${@}" \
     || interact::in_args "--namespace" "${@}"

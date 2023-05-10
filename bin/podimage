@@ -33,7 +33,7 @@ function main {
         usage
     fi
 
-    declare -r regex="${1:-""}"
+    local -r regex="${1:-""}"
 
     podid "${regex}" --namespace \
     	| while read -r namespace pod

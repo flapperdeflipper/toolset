@@ -34,8 +34,8 @@ function main {
         usage
     fi
 
-    declare lineno="${1:-""}"
-    declare re='^[0-9]+$'
+    local lineno="${1:-""}"
+    local re='^[0-9]+$'
 
     if ! var::matches "${lineno}" "${re}"
     then

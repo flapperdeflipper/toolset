@@ -142,10 +142,19 @@ function main {
     local input="${1:-""}"
 
     local baselink
-          baselink="$( git::baseurl )"
-
     local branch
-          branch="$( git::branch )"
+
+    if ! baselink="$( git::baseurl 2>/dev/null )" \
+    && (
+        interact::in_args "--mr" "${@}" \
+     || interact::in_args "--mymr" "${@}"
+    )
+    then
+        open "https://gitlab.com/dashboard/merge_requests?assignee_username=$GIT_USERNAME"
+        exit 0
+    fi
+
+    branch="$( git::branch )"
 
     if [[ "${input}" == "--jira" ]] \
     || [[ "${input}" == "-j"     ]]

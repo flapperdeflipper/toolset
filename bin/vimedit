@@ -47,8 +47,8 @@ function existsfilter {
 function main {
     var::eq "${#}" 0 && usage
 
-    declare -i read_content=0
-    declare -i read_filename=0
+    local -i read_content=0
+    local -i read_filename=0
 
     ## Parse command line arguments
     while [[ "${1:-""}" != "" ]]

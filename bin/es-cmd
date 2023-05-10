@@ -31,13 +31,13 @@ function main {
     fi
 
     ## Get arguments
-    declare -r method="${1:-""}"; shift
-    declare -r url="${1:-""}";    shift
-    declare -r data="${*}"
-    declare -a cmd
+    local -r method="${1:-""}"; shift
+    local -r url="${1:-""}";    shift
+    local -r data="${*}"
+    local -a cmd
 
     ## Get ES_HOST var or use localhost instead
-    declare es_host="${ES_HOST:-localhost:9200}"
+    local es_host="${ES_HOST:-localhost:9200}"
 
     log::info "Sending: ${method} ${es_host}${url}"
 

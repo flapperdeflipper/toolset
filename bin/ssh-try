@@ -34,11 +34,11 @@ function main {
         usage
     fi
 
-    declare host="${1}"
-    declare user="${2:-"$(whoami)"}"
+    local host="${1}"
+    local user="${2:-"$(whoami)"}"
 
-    declare -i maxcount="${3:-10}"
-    declare -i count=1
+    local -i maxcount="${3:-10}"
+    local -i count=1
 
     while ! ssh -o ConnectTimeout=1 -l "${user}" "${host}" \
        && var::lt "${count}" "${maxcount}"

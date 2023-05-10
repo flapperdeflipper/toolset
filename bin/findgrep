@@ -34,11 +34,11 @@ function main {
         usage
     fi
 
-    declare -r regex="${1:-""}"; shift
-    declare -r arguments="${*:-"-type f"}"
-    declare files
+    local -r regex="${1:-""}"; shift
+    local -r arguments="${*:-"-type f"}"
+    local files
 
-    declare -a cmd=(
+    local -a cmd=(
         find
         "."
         "${arguments}"
