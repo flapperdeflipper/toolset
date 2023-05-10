@@ -139,7 +139,7 @@ function aws::ssm::tunnel {
 ## Run command
 ##
 
-function aws:ssm::run_command {
+function aws::ssm::run_command {
     local instance="${1}"; shift
     local command="${1}"; shift
     local arguments=("${@}")
@@ -165,3 +165,73 @@ function aws:ssm::run_command {
 
     return 0
 }
+
+
+##
+## Retrieve an SSM parameter
+##
+
+function aws::ssm::get_parameter() {
+    local key="${1}";   shift
+    local parameter=""
+
+    log::trace "${FUNCNAME[0]}: ${*} - Retrieving ssm parameter ${key}"
+
+    if ! parameter="$( \
+        aws::cli ssm get-parameter  \
+            --name "${key}" \
+            --output text \
+            --query "Parameter.Value" )" \
+    || [[ -z "${parameter:-}" ]]
+    then
+        log::error "Failed to retrieve ssm parameter ${key}"
+        return 1
+    fi
+
+    echo "${parameter}"
+}
+
+##
+## Store an SSM parameter
+##
+
+function aws::ssm::put_parameter() {
+    local path="${1}"; shift
+    local value="${1}"; shift
+    local sts_user
+
+    local ssm_args=(
+        --name "${path}"
+        --value "${value}"
+        --type SecureString
+    )
+
+    log::info "${FUNCNAME[0]}: Checking of ssm parameter ${path} exists"
+
+    if ! aws::ssm::get_parameter "${path}" > /dev/null 2>&1
+    then
+        log::info "Creating ssm parameter ${path}"
+
+        sts_user="$( aws::sts::user_id )"
+
+        ssm_args+=( --tags "[
+            {\"Key\":\"Terraform\", \"Value\":\"false\"},
+            {\"Key\":\"Utility\", \"Value\": \"${TOOLSET_SCRIPT_NAME}\"},
+            {\"Key\":\"CreatedBy\",\"Value\":\"${sts_user}\"}
+          ]"
+        )
+    else
+        log::info "Updating ssm parameter ${path}"
+        ssm_args+=(--overwrite)
+    fi
+
+    if ! chronic aws ssm put-parameter "${ssm_args[@]}"
+    then
+        log::error "Failed to create SSM parameter ${path}"
+        return 1
+    fi
+
+    return 0
+
+}
+

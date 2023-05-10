@@ -16,7 +16,7 @@ function aws::sts::user_id {
     local arguments=("${@}")
 
     aws::sts::caller_identity "${arguments[*]}" \
-        | jq -r '.UserId'
+        | jq -r '.UserId | split(":")[1]'
 }
 
 function aws::sts::account_id {
