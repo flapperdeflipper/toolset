@@ -31,7 +31,7 @@ function usage {
       ${TOOLSET_SCRIPT_NAME} --path / --list
 
       ## Create/Update parameter
-      ${TOOLSET_SCRIPT_NAME} --path /some/path --value plop
+      ${TOOLSET_SCRIPT_NAME} --path /some/path --value plop --profile some --region eu-west-1
 
 
 EOF
@@ -100,7 +100,7 @@ function main() {
     depends::check_list "jq" "aws" "chronic" || exit 1
 
     ## Check if admin
-    aws::check_for_admin || return 1
+    aws::check_for_admin "${arguments[*]}" || return 1
 
     ## Show list on request
     if var::eq "${list}" 1
@@ -112,7 +112,7 @@ function main() {
     ## Exit if no value given
     var::is_empty "${value}" && usage
 
-    aws::ssm::parameter::put "${path}" "${value}" || return 1
+    aws::ssm::parameter::put "${path}" "${value}" "${arguments[@]}" || return 1
 }
 
 main "${@}"

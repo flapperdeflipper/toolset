@@ -26,7 +26,7 @@ function aws::check_for_admin() {
 
     log::trace "${FUNCNAME[0]}: ${*} - Retrieving caller identity"
 
-    if ! role="$( aws::cli sts get-caller-identity | jq -r '.Arn' )" \
+    if ! role="$( aws::cli sts get-caller-identity ${*} | jq -r '.Arn' )" \
     || [[ -z "${role}" ]]
     then
         log::error "Failed to retrieve caller identy from AWS api"

@@ -173,6 +173,8 @@ function aws::ssm::run_command {
 
 function aws::ssm::parameter::get() {
     local key="${1}";   shift
+    local -a arguments=("${@}")
+
     local parameter=""
 
     log::trace "${FUNCNAME[0]}: ${*} - Retrieving ssm parameter ${key}"
@@ -181,7 +183,9 @@ function aws::ssm::parameter::get() {
         aws::cli ssm get-parameter  \
             --name "${key}" \
             --output text \
-            --query "Parameter.Value" )" \
+            --query "Parameter.Value" \
+            ${arguments[*]} \
+    )" \
     || [[ -z "${parameter:-}" ]]
     then
         log::error "Failed to retrieve ssm parameter ${key}"
@@ -198,34 +202,26 @@ function aws::ssm::parameter::get() {
 function aws::ssm::parameter::put() {
     local path="${1}"; shift
     local value="${1}"; shift
-    local sts_user
+    local -a arguments=("${@}")
 
     local ssm_args=(
         --name "${path}"
         --value "${value}"
         --type SecureString
+        "${arguments[@]}"
     )
 
     log::info "${FUNCNAME[0]}: Checking of ssm parameter ${path} exists"
 
-    if ! aws::ssm::parameter::get "${path}" > /dev/null 2>&1
+    if ! aws::ssm::parameter::get "${path}" "${arguments[@]}" > /dev/null 2>&1
     then
         log::info "Creating ssm parameter ${path}"
-
-        sts_user="$( aws::sts::user_id )"
-
-        ssm_args+=( --tags "[
-            {\"Key\":\"Terraform\", \"Value\":\"false\"},
-            {\"Key\":\"Utility\", \"Value\": \"${TOOLSET_SCRIPT_NAME}\"},
-            {\"Key\":\"CreatedBy\",\"Value\":\"${sts_user}\"}
-          ]"
-        )
     else
         log::info "Updating ssm parameter ${path}"
         ssm_args+=(--overwrite)
     fi
 
-    if ! chronic aws ssm put-parameter "${ssm_args[@]}"
+    if ! chronic aws ssm put-parameter ${ssm_args[*]}
     then
         log::error "Failed to create SSM parameter ${path}"
         return 1
@@ -247,6 +243,6 @@ function aws::ssm::parameter::list() {
         --recursive  \
         --query 'Parameters[].[Name]' \
         --output text \
-        "${arguments[@]}"
+        ${arguments[*]}
 }
 
