@@ -171,7 +171,7 @@ function aws::ssm::run_command {
 ## Retrieve an SSM parameter
 ##
 
-function aws::ssm::get_parameter() {
+function aws::ssm::parameter::get() {
     local key="${1}";   shift
     local parameter=""
 
@@ -195,7 +195,7 @@ function aws::ssm::get_parameter() {
 ## Store an SSM parameter
 ##
 
-function aws::ssm::put_parameter() {
+function aws::ssm::parameter::put() {
     local path="${1}"; shift
     local value="${1}"; shift
     local sts_user
@@ -208,7 +208,7 @@ function aws::ssm::put_parameter() {
 
     log::info "${FUNCNAME[0]}: Checking of ssm parameter ${path} exists"
 
-    if ! aws::ssm::get_parameter "${path}" > /dev/null 2>&1
+    if ! aws::ssm::parameter::get "${path}" > /dev/null 2>&1
     then
         log::info "Creating ssm parameter ${path}"
 
@@ -233,5 +233,20 @@ function aws::ssm::put_parameter() {
 
     return 0
 
+}
+
+##
+## List all ssm parameters
+##
+function aws::ssm::parameter::list() {
+    local path="${1}"; shift
+    local -a arguments=("${@}")
+
+    aws::cli ssm get-parameters-by-path \
+        --path "${path}" \
+        --recursive  \
+        --query 'Parameters[].[Name]' \
+        --output text \
+        "${arguments[@]}"
 }
 

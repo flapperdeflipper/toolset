@@ -13,15 +13,26 @@ function usage {
 
     Create or update and SSM parameter
 
-    This script can be used to create or update SSM parameters.
+    This script can be used to list, create or update SSM parameters.
 
     ${TOOLSET_SCRIPT_NAME} <lineno>
 
-   Arguments:
-    -h, --help  - Show this menu
+    Required arguments:
+      -p, --path  - The parameter path to list or create/update
+
+    Arguments:
+       -h, --help  - Show this menu
+
+       -l, --list  - List parameters recursive starting at a certain path
+       -v, --value - When creating/updating: set this value
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} <PATH> <VALUE>
+      ## List parameters
+      ${TOOLSET_SCRIPT_NAME} --path / --list
+
+      ## Create/Update parameter
+      ${TOOLSET_SCRIPT_NAME} --path /some/path --value plop
+
 
 EOF
 
@@ -29,27 +40,79 @@ EOF
 }
 
 
-function main {
-    if var::ne "${#}" 2 \
-    || interact::usage "${@}"
+function main() {
+    if var::lt "${#}" 1
     then
+        usage 0
+    fi
+
+    local arguments=""
+    local path=""
+    local value=""
+
+    local -i list=0
+
+    ## Parse command line arguments
+    while [ "${1:-""}" != "" ]
+    do
+        case "${1}" in
+            -h|--help)
+                usage
+            ;;
+
+            -l|--list)
+                list=1
+                shift
+            ;;
+
+            -p|--path)
+                path="${2}"
+                shift
+            ;;
+
+            -v|--value)
+                value="${2}"
+                shift
+            ;;
+
+            *)
+                arguments="${arguments} ${1:-""} ${2:-""}"
+                shift
+            ;;
+
+        esac
+
+        shift || true
+    done
+
+    ## Exit if no path given
+    var::is_empty "${path}" && usage
+
+    ## Exit if list and value
+    if var::eq "${list}" 1 \
+    && var::has_value "${value}"
+    then
+        log::error "You can't use --list and --value together"
         usage
     fi
 
-    local path="${1}"; shift
-    local value="${1}"; shift
+    ## Check for dependencies
+    depends::check_list "jq" "aws" "chronic" || exit 1
 
-    if var::is_empty "${path}" \
-    || var::is_empty "${value}"
-    then
-        usage
-    fi
-
+    ## Check if admin
     aws::check_for_admin || return 1
-    depends::check_list jq aws chronic
 
-    aws::ssm::put_parameter "${path}" "${value}" || return 1
+    ## Show list on request
+    if var::eq "${list}" 1
+    then
+        aws::ssm::parameter::list "${path}" "${arguments[*]}"
+        exit 0
+    fi
+
+    ## Exit if no value given
+    var::is_empty "${value}" && usage
+
+    aws::ssm::parameter::put "${path}" "${value}" || return 1
 }
-
 
 main "${@}"
