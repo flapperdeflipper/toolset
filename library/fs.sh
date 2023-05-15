@@ -9,7 +9,7 @@
 ##
 
 function fs::is_dir {
-    local directory="${1:-""}"
+    local directory="${1:-}"
 
     log::trace "${FUNCNAME[0]}: ${*} - Checking if directory ${directory} exists"
 
@@ -26,7 +26,7 @@ function fs::is_dir {
 ##
 
 function fs::is_file {
-    local file="${1:-""}"
+    local file="${1:-}"
 
     log::trace "${FUNCNAME[0]}: ${*} - Checking if file ${file} exists"
 
@@ -43,7 +43,7 @@ function fs::is_file {
 ##
 
 function fs::is_device {
-    local device="${1:-""}"
+    local device="${1:-}"
 
     log::trace "${FUNCNAME[0]}: ${*} - Checking if device ${device} exists"
 
@@ -60,7 +60,7 @@ function fs::is_device {
 ##
 
 function fs::is_socket {
-    local socket="${1:-""}"
+    local socket="${1:-}"
 
     log::trace "${FUNCNAME[0]}: ${*} - Checking if socket ${socket} exists"
 
@@ -77,7 +77,7 @@ function fs::is_socket {
 ##
 
 function fs::is_pipe {
-    local pipe="${1:-""}"
+    local pipe="${1:-}"
 
     log::trace "${FUNCNAME[0]}: Checking if pipe ${pipe} exists"
 
@@ -94,7 +94,7 @@ function fs::is_pipe {
 ##
 
 function fs::is_link {
-    local file="${1:-""}"
+    local file="${1:-}"
 
     log::trace "${FUNCNAME[0]}: ${*} - Checking if symlink ${file} exists"
 
@@ -111,7 +111,7 @@ function fs::is_link {
 ##
 
 function fs::is_executable {
-    local file="${1:-""}"
+    local file="${1:-}"
 
     log::trace "${FUNCNAME[0]}: ${*} - Checking if file ${file} is executable"
 
@@ -128,7 +128,7 @@ function fs::is_executable {
 ##
 
 function fs::exists {
-    local file="${1:-""}"
+    local file="${1:-}"
 
     log::trace "${FUNCNAME[0]}: ${*} - Checking if ${file} exists"
 
@@ -145,8 +145,8 @@ function fs::exists {
 ##
 
 function fs::is_regex {
-    local file="${1:-""}" ; shift
-    local regex="${1:-""}"; shift
+    local file="${1:-}" ; shift
+    local regex="${1:-}"; shift
     local arguments="${*:--E}"
 
     fs::exists "${file}" || return 1
@@ -167,8 +167,8 @@ function fs::is_regex {
 ##
 
 function fs::regex_count {
-    local file="${1:-""}"; shift
-    local regex="${1:-""}"; shift
+    local file="${1:-}"; shift
+    local regex="${1:-}"; shift
     local arguments="${*:--E}"
 
     fs::exists "${file}" || return 1

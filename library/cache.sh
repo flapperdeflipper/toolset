@@ -5,7 +5,7 @@
 ##
 
 function cache::init {
-    local dir="${1:-""}"; shift || true
+    local dir="${1:-}"; shift || true
 
     ## export the cache directory
     export cachedir="${dir:-"${HOME}/.local/cache/bash"}"
@@ -42,6 +42,35 @@ function cache::init {
 
 
 ##
+## Check of cache is initialized
+##
+function cache::is_initialized() {
+    log::trace "${FUNCNAME[0]}: Checking if cache key is initialized"
+
+    if var::is_null "${cache_dir:-}" \
+    || var::is_null "${cache_extension:-}"
+    then
+        return 1
+    fi
+
+    return 0
+}
+
+
+##
+## Print a warning if cache is not initialized
+##
+function cache::warning() {
+    log::trace "${FUNCNAME[0]}: Checking if cache key is initialized"
+
+    if ! cache::is_initialized \
+    || ! cache::exists
+    then
+        log::warning "Cache is not initialized or missing!"
+    fi
+}
+
+##
 ## Check if cache item exists
 ##
 
@@ -49,6 +78,8 @@ function cache::exists {
     local key="${1}"
 
     log::trace "${FUNCNAME[0]}: ${*} - Checking if cache key ${key} exists"
+
+    cache::warning || return 1
 
     if fs::is_file "${cachedir}/${key}.${cache_extension}"
     then
@@ -92,6 +123,7 @@ function cache::set {
     local value="${2}"
 
     log::trace "${FUNCNAME[0]}: ${*} - Setting ${key}:${value} in cache"
+    cache::warning || return 1
 
     if ! printf "%s" "$value" > "${cachedir}/${key}.${cache_extension}"
     then
@@ -111,6 +143,7 @@ function cache::flush {
     local key=${1}
 
     log::trace "${FUNCNAME[0]}: ${*} - Flushing ${key} from cache"
+    cache::warning || return 1
 
     if ! rm -f "${cachedir}/${key}.${cache_extension}"
     then
@@ -127,6 +160,7 @@ function cache::flush {
 
 function cache::flushall {
     log::trace "${FUNCNAME[0]}: ${*} - Flushing all keys from cache"
+    cache::warning || return 1
 
     if ! fs::is_dir "${cachedir}"
     then

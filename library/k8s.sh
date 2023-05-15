@@ -9,7 +9,7 @@
 ##
 
 function k8s::podname {
-    local -r podname="${1:-""}"
+    local -r podname="${1:-}"
 
     log::trace "${FUNCNAME[0]}: ${*} - Generating pod name for ${podname}"
 
@@ -100,7 +100,7 @@ function k8s::grep {
     local refresh=1
 
     ## Parse command line arguments
-    while [ "${1:-""}" != "" ]
+    while [ "${1:-}" != "" ]
     do
         case "${1}" in
             -w|--wide)
@@ -123,7 +123,7 @@ function k8s::grep {
                 shift
             ;;
             *)
-                arguments="${arguments} ${1:-""} ${2:-""}"
+                arguments="${arguments} ${1:-} ${2:-}"
                 shift
                 ;;
         esac
@@ -150,7 +150,7 @@ function k8s::grep {
 
 function k8s::is_valid_object {
 
-    local -r search=${1:-""}
+    local -r search=${1:-}
 
     var::is_empty "${search}" && return 1
 
@@ -179,7 +179,7 @@ function k8s::is_valid_object {
 
 function k8s::object_exists {
 
-    local -r name="${1:-""}"
+    local -r name="${1:-}"
     local -r object="${2:-pod}"
     local -r namespace="${3:-default}"
 
@@ -211,7 +211,7 @@ function k8s::object_exists {
 
 function k8s::delete_object {
 
-    local -r name="${1:-""}"
+    local -r name="${1:-}"
     local -r object="${2:-pod}"
     local -r namespace="${3:-default}"
     local -ir maxcount="${4:-10}"
@@ -254,7 +254,7 @@ function k8s::delete_object {
 
 
 function k8s::podstate {
-    local -r name="${1:-""}"
+    local -r name="${1:-}"
     local -r namespace="${2:-default}"
 
     log::trace "${FUNCNAME[0]}: ${*} - Running k8s::podstate"
@@ -280,7 +280,7 @@ function k8s::podstate {
 
 function k8s::pod_is_ready {
 
-    local -r name="${1:-""}"
+    local -r name="${1:-}"
     local -r namespace="${2:-default}"
     local podstate
 
@@ -309,7 +309,7 @@ function k8s::pod_is_ready {
 
 function k8s::pod_wait_until_ready {
 
-    local -r name="${1:-""}"
+    local -r name="${1:-}"
     local -r namespace="${2:-default}"
     local -ir maxcount="${4:-20}"
 
@@ -350,7 +350,7 @@ function k8s::pod_wait_until_ready {
 ##
 
 function k8s::drain {
-    local node="${1:-""}"
+    local node="${1:-}"
 
     var::is_empty "${node}" && return 1
 
@@ -371,14 +371,12 @@ function k8s::drain {
 }
 
 
-
 ##
 ## Cordon a node
 ##
 
-
 function k8s::cordon {
-    local node="${1:-""}"
+    local node="${1:-}"
 
     var::is_empty "${node}" && return 1
 
@@ -399,13 +397,12 @@ function k8s::cordon {
 }
 
 
-
 ##
 ## Check for existing object functions
 ##
 
 function k8s::is_service {
-    local -r name="${1:-""}"
+    local -r name="${1:-}"
     local -r namespace="${2:-default}"
 
     var::is_empty "${name}" && return 1
@@ -417,7 +414,7 @@ function k8s::is_service {
 
 
 function k8s::is_pod {
-    local -r name="${1:-""}"
+    local -r name="${1:-}"
     local -r namespace="${2:-default}"
 
     var::is_empty "${name}" && return 1
@@ -429,7 +426,7 @@ function k8s::is_pod {
 
 
 function k8s::is_deployment {
-    local -r name="${1:-""}"
+    local -r name="${1:-}"
     local -r namespace="${2:-default}"
 
     var::is_empty "${name}" && return 1
@@ -441,7 +438,7 @@ function k8s::is_deployment {
 
 
 function k8s::is_statefulset {
-    local -r name="${1:-""}"
+    local -r name="${1:-}"
     local -r namespace="${2:-default}"
 
     var::is_empty "${name}" && return 1
@@ -453,7 +450,7 @@ function k8s::is_statefulset {
 
 
 function k8s::is_configmap {
-    local -r name="${1:-""}"
+    local -r name="${1:-}"
     local -r namespace="${2:-default}"
 
     var::is_empty "${name}" && return 1
@@ -465,7 +462,7 @@ function k8s::is_configmap {
 
 
 function k8s::is_secret {
-    local -r name="${1:-""}"
+    local -r name="${1:-}"
     local -r namespace="${2:-default}"
 
     var::is_empty "${name}" && return 1
@@ -477,7 +474,7 @@ function k8s::is_secret {
 
 
 function k8s::is_serviceaccount {
-    local -r name="${1:-""}"
+    local -r name="${1:-}"
     local -r namespace="${2:-default}"
 
     var::is_empty "${name}" && return 1
@@ -489,7 +486,7 @@ function k8s::is_serviceaccount {
 
 
 function k8s::is_role {
-    local -r name="${1:-""}"
+    local -r name="${1:-}"
     local -r namespace="${2:-default}"
 
     var::is_empty "${name}" && return 1
@@ -501,7 +498,7 @@ function k8s::is_role {
 
 
 function k8s::is_rolebinding {
-    local -r name="${1:-""}"
+    local -r name="${1:-}"
     local -r namespace="${2:-default}"
 
     var::is_empty "${name}" && return 1
@@ -513,7 +510,7 @@ function k8s::is_rolebinding {
 
 
 function k8s::is_namespace {
-    local -r name="${1:-""}"
+    local -r name="${1:-}"
 
     var::is_empty "${name}" && return 1
 
@@ -524,7 +521,7 @@ function k8s::is_namespace {
 
 
 function k8s::is_node {
-    local -r name="${1:-""}"
+    local -r name="${1:-}"
 
     var::is_empty "${name}" && return 1
 
@@ -534,7 +531,7 @@ function k8s::is_node {
 }
 
 function k8s::is_clusterrole {
-    local -r name="${1:-""}"
+    local -r name="${1:-}"
 
     var::is_empty "${name}" && return 1
 
@@ -545,7 +542,7 @@ function k8s::is_clusterrole {
 
 
 function k8s::is_clusterrolebinding {
-    local -r name="${1:-""}"
+    local -r name="${1:-}"
 
     var::is_empty "${name}" && return 1
 

@@ -11,7 +11,7 @@
 function string::lower {
     [[ "${#}" -le 1 ]] || return 2
 
-    local string="${1}"
+    local string="${1:-}"
 
     if var::is_empty "${string}" && var::is_stdin
     then
@@ -35,7 +35,7 @@ function string::lower {
 function string::upper {
     [[ "${#}" -le 1 ]] || return 2
 
-    local string="${1}"
+    local string="${1:-}"
 
     if var::is_empty "${string}" && var::is_stdin
     then
@@ -75,7 +75,7 @@ function string::replace {
 function string::length {
     [[ "${#}" -le 1 ]] || return 2
 
-    local string="${1}"
+    local string="${1:-}"
 
     if var::is_empty "${string}" && var::is_stdin
     then
@@ -98,7 +98,7 @@ function string::length {
 function string::chomp {
     [[ "${#}" -le 1 ]] || return 2
 
-    local string="${1}"
+    local string="${1:-}"
 
     if var::is_empty "${string}" && var::is_stdin
     then
@@ -121,7 +121,7 @@ function string::chomp {
 function string::trim {
     [[ "${#}" -le 1 ]] || return 2
 
-    local string="${1}"
+    local string="${1:-}"
 
     if var::is_empty "${string}" && var::is_stdin
     then
@@ -144,7 +144,7 @@ function string::trim {
 function string::lstrip {
     [[ "${#}" -le 1 ]] || return 2
 
-    local string="${1}"
+    local string="${1:-}"
 
     if var::is_empty "${string}" && var::is_stdin
     then
@@ -167,7 +167,7 @@ function string::lstrip {
 function string::rstrip {
     [[ "${#}" -le 1 ]] || return 2
 
-    local string="${1}"
+    local string="${1:-}"
 
     if var::is_empty "${string}" && var::is_stdin
     then

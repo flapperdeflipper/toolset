@@ -83,7 +83,6 @@ load "../../../bin/toolset"
     [ "${status}" -eq 2 ]
 }
 
-
 ##
 ## var::is_null
 ##
@@ -91,10 +90,15 @@ load "../../../bin/toolset"
 @test "Test that var::is_null returns 0 when var is null" {
     run var::is_null "null"
     [ "${status}" -eq 0 ]
+
+    run var::is_null ""
+    [ "${status}" -eq 0 ]
 }
 
 @test "Test that var::is_null returns 1 when var is not null" {
     run var::is_null "a"
+    [ "${status}" -eq 1 ]
+    run var::is_null "one"
     [ "${status}" -eq 1 ]
 }
 
@@ -103,6 +107,33 @@ load "../../../bin/toolset"
     [ "${status}" -eq 2 ]
 
     run var::is_null "a" "b" "c"
+    [ "${status}" -eq 2 ]
+}
+
+##
+## var::is_not_null
+##
+
+@test "Test that var::is_not_null returns 1 when var is null" {
+    run var::is_not_null "null"
+    [ "${status}" -eq 1 ]
+    run var::is_not_null ""
+    [ "${status}" -eq 1 ]
+}
+
+@test "Test that var::is_not_null returns 0 when var is not null" {
+    run var::is_not_null "a"
+    [ "${status}" -eq 0 ]
+
+    run var::is_not_null "one"
+    [ "${status}" -eq 0 ]
+}
+
+@test "Test that var::is_not_null returns 2 when invalid input" {
+    run var::is_not_null
+    [ "${status}" -eq 2 ]
+
+    run var::is_not_null "a" "b" "c"
     [ "${status}" -eq 2 ]
 }
 

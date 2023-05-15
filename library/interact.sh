@@ -12,7 +12,7 @@ function interact::prompt_bool {
     log::trace "${FUNCNAME[0]}: ${*} - Asking the user for confirmation"
 
     local prompt="Continue?"
-    declare -A opts
+    local -A opts
 
     while getopts ":y" opt
     do
@@ -24,14 +24,14 @@ function interact::prompt_bool {
 
     shift $(( OPTIND - 1 ))
 
-    if [[ "${opts[default_yes]:-""}" ]]
+    if [[ "${opts[default_yes]:-}" ]]
     then
         prompt+=" [Y/n]"
     else
         prompt+=" [y/N]"
     fi
 
-    if [[ -z "${BATS_TEST_FILENAME:-""}" ]]
+    if [[ -z "${BATS_TEST_FILENAME:-}" ]]
     then
         ## Remove all input that was accidentally inserted during wait
         read -r -d '' -t 0.1 -n 10000

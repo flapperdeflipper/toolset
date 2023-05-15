@@ -4,6 +4,9 @@
 ## docker-compose functions                                                   ##
 ################################################################################
 
+##
+## Run docker compose up
+##
 function docker::compose_build {
     if ! fs::is_file docker-compose.yml
     then
@@ -16,8 +19,12 @@ function docker::compose_build {
     docker compose up --build
 }
 
+
+##
+## Rebuild docker compose containers
+##
 function docker::compose_rebuild {
-    local service="${1:-""}"
+    local service="${1:-}"
 
     if var::is_empty "${service}"
     then
@@ -35,6 +42,9 @@ function docker::compose_rebuild {
 ## Docker                                  ##
 #############################################
 
+##
+## Open a shell in a running container
+##
 function docker::connect {
 
     if ! docker ps &>/dev/null
@@ -67,6 +77,9 @@ function docker::connect {
 }
 
 
+##
+## Remove all existing docker images
+##
 function docker::clean_images {
     log::info "** Removing all docker images"
 
@@ -77,6 +90,9 @@ function docker::clean_images {
 }
 
 
+##
+## Remove all exited containers
+##
 function docker::clean_all {
     log::info "** Removing all exited docker containers"
 
@@ -88,6 +104,9 @@ function docker::clean_all {
 }
 
 
+##
+## Kill all running containers
+##
 function docker::kill_all {
     log::info "** Killing all running docker container"
 
@@ -98,6 +117,9 @@ function docker::kill_all {
 }
 
 
+##
+## Remove all running containers
+##
 function docker::remove_all {
     log::info "Removing all running docker containers"
 
@@ -108,6 +130,9 @@ function docker::remove_all {
 }
 
 
+##
+## stop all running containers and prune filesystem
+##
 function docker::prune {
     log::info "Purging as much as possible"
 
@@ -116,6 +141,9 @@ function docker::prune {
 }
 
 
+##
+## Remove as much as possible
+##
 function docker::force_clean {
     log::info "** Cleaning up running containers"
 
@@ -147,6 +175,9 @@ function docker::force_clean {
 }
 
 
+##
+## Remove all without force
+##
 function docker::clean {
     log::info "** Removing unused images"
 
@@ -164,4 +195,6 @@ function docker::clean {
         | grep Exited \
         | awk '{ print $1 }' \
         | xargs docker rm -f
+
+    docker system prune
 }

@@ -93,7 +93,6 @@ And after that, run the `update-symlinks` script:
 ```
 
 
-
 ## Tools overview
 
 The `tools` utility in the bin directory provides an overview of all tools that

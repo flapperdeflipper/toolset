@@ -150,12 +150,12 @@ function net::http::downforme {
     then
         echo -e "usage: downforme website_url"
     else
-        JUSTYOUARRAY="$( \
+        JUSTYOU="$( \
             curl "http://downforeveryoneorjustme.com/${1}" \
                 | grep -o 'It.s just you' \
             )"
 
-        if [ ${#JUSTYOUARRAY} != 0 ]
+        if [ ${#JUSTYOU} != 0 ]
         then
             echo -e "It's just you. \n${1} is up."
         else

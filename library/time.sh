@@ -6,8 +6,8 @@ function time::human_readable_seconds {
 
     log::trace "${FUNCNAME[0]}: ${*} - Converting seconds to a human readable format"
 
-    declare T="${1}"
-    declare DAY="$((T / 60 / 60 / 24))" HR="$((T / 60 / 60 % 24))" MIN="$((T / 60 % 60))" SEC="$((T % 60))"
+    local T="${1}"
+    local DAY="$((T / 60 / 60 / 24))" HR="$((T / 60 / 60 % 24))" MIN="$((T / 60 % 60))" SEC="$((T % 60))"
 
     [[ ${DAY} -gt 0 ]] && printf '%d days ' "${DAY}"
     [[ ${HR} -gt 0 ]] && printf '%d hours ' "${HR}"
@@ -20,7 +20,7 @@ function time::human_readable_seconds {
 function time::now {
     local timezone="${1:-"Europe/Amsterdam"}"
 
-    declare now
+    local now
 
     log::trace "${FUNCNAME[0]}: ${*} - Retrieving unixtime in seconds"
 

@@ -142,7 +142,7 @@ function ssl::is_combined {
 ##
 
 function ssl::modulus::key {
-    fs::exists "${1:-""}" || return 1
+    fs::exists "${1:-}" || return 1
 
     log::trace "${FUNCNAME[0]}: ${*} - Getting the modulus for key ${1}"
 
@@ -343,11 +343,11 @@ function ssl::generate::create_random_serial {
 ##
 
 function ssl::generate::create_crl {
-    local -r basedir="${2:-""}"
-    local -r password="${4:-""}"
-    local -r type="${6:-""}"
+    local -r basedir="${2:-}"
+    local -r password="${4:-}"
+    local -r type="${6:-}"
 
-    local extra_args="${8:-""}"
+    local extra_args="${8:-}"
     local -a extra
 
     if ! var::is_empty "${extra_args}"
@@ -384,7 +384,7 @@ function ssl::generate::create_private_key {
     local -r password="${4}"
     local -r type="${6}"
     local -r curve="${8}"
-    local extra_args="${10:-""}"
+    local extra_args="${10:-}"
     local -a extra
 
     if ! var::is_empty "${extra_args}"
@@ -438,8 +438,8 @@ function ssl::generate::create_csr {
     local -r password="${4}"
     local -r type="${6}"
 
-    local outfile="${8:-""}"
-    local extra_args="${10:-""}"
+    local outfile="${8:-}"
+    local extra_args="${10:-}"
 
     local -a extra
     if ! var::is_empty "${extra_args}"
@@ -480,8 +480,8 @@ function ssl::generate::sign_csr {
     local -r password="${4}"
     local -r type="${6}"
 
-    local -r extension="${8:-""}"
-    local extra_args="${10:-""}"
+    local -r extension="${8:-}"
+    local extra_args="${10:-}"
     local -a extra
 
     if ! var::is_empty "${extra_args}"

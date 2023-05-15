@@ -5,7 +5,7 @@
 ##
 
 function hibp::is_safe {
-    local password="${1:-""}"; shift || return 2
+    local password="${1:-}"; shift || return 2
     local -i count=0
 
     log::trace "${FUNCNAME[0]}: ****** ${*} - Checking is password is safe"
@@ -30,7 +30,7 @@ function hibp::is_safe {
 ##
 
 function hibp::check {
-    local password="${1:-""}"; shift || return 1
+    local password="${1:-}"; shift || return 1
     local -i silent="${1:-0}"
 
     log::trace "${FUNCNAME[0]}: ****** ${*} Checking password agains hibp api"

@@ -34,14 +34,14 @@ function array::deduplicate {
     [[ "${#}" -lt 1 ]] \
         && log::warning "%s: Missing arguments" "${FUNCNAME[0]}" && return 2
 
-    declare -A arr_tmp
-    declare -a arr_unique
+    local -A arr_tmp
+    local -a arr_unique
 
     log::trace "${FUNCNAME[0]}: ${*} - Deduplicating array"
 
     for i in "${@}"
     do
-        { [[ -z ${i:-""} || ${arr_tmp[${i}]} ]]; } && continue
+        { [[ -z ${i:-} || ${arr_tmp[${i}]} ]]; } && continue
 
         arr_unique+=("${i}") && arr_tmp[${i}]=x
     done
@@ -58,7 +58,7 @@ function array::length {
     [[ $# -lt 1 ]] \
         && log::warning "%s: Missing arguments" "${FUNCNAME[0]}" && return 2
 
-    declare -a array
+    local -a array
     local array=("${@}")
 
     log::trace "${FUNCNAME[0]}: ${*} - Retrieving length of array"
@@ -72,7 +72,7 @@ function array::length {
 ##
 
 function array::is_empty {
-    declare -a array
+    local -a array
 
     log::trace "${FUNCNAME[0]}: ${*} - Checking if array is empty"
 
@@ -95,7 +95,7 @@ function array::not_empty {
     [[ $# -lt 1 ]] \
         && log::warning "%s: Missing arguments" "${FUNCNAME[0]}" && return 2
 
-    declare -a array
+    local -a array
 
     log::trace "${FUNCNAME[0]}: ${*} - Checking if array is not empty"
 
@@ -118,7 +118,7 @@ function array::join {
     [[ $# -lt 2 ]] \
         && log::warning "%s: Missing arguments" "${FUNCNAME[0]}" && return 2
 
-    declare delimiter="${1}"
+    local delimiter="${1}"
     shift
 
     log::trace "${FUNCNAME[0]}: ${*} - Joining array with delimiter ${delimiter}"
@@ -138,10 +138,10 @@ function array::reverse {
     [[ "${#}" -eq 0 ]] \
         && log::warning "%s: Missing arguments" "${FUNCNAME[0]}" && return 2
 
-    declare min=0
-    declare -a array
+    local min=0
+    local -a array
     array=("${@}")
-    declare max=$((${#array[@]} - 1))
+    local max=$((${#array[@]} - 1))
 
     log::trace "${FUNCNAME[0]}: ${*} - Reversing array"
 
@@ -167,7 +167,7 @@ function array::reverse {
 function array::random_element {
     [[ $# -lt 1 ]] && log::warning "%s: Missing arguments" "${FUNCNAME[0]}" && return 2
 
-    declare -a array
+    local -a array
     local array=("${@}")
 
     log::trace "${FUNCNAME[0]}: ${*} - Printing random element from array"
@@ -183,9 +183,9 @@ function array::sort {
     [[ $# -lt 1 ]] \
         && log::warning "%s: Missing arguments" "${FUNCNAME[0]}" && return 2
 
-    declare -a array=("${@}")
-    declare -a sorted
-    declare noglobtate
+    local -a array=("${@}")
+    local -a sorted
+    local noglobtate
 
     log::trace "${FUNCNAME[0]}: ${*} - Sorting array"
 
@@ -193,7 +193,7 @@ function array::sort {
 
     set -o noglob
 
-    declare IFS=$'\n'
+    local IFS=$'\n'
 
     mapfile -t sorted < <( sort <<< "${array[*]}" )
 
@@ -212,9 +212,9 @@ function array::sort-r {
     [[ $# -lt 1 ]] \
         && log::warning "%s: Missing arguments" "${FUNCNAME[0]}" && return 2
 
-    declare -a array=("${@}")
-    declare -a sorted
-    declare noglobstate
+    local -a array=("${@}")
+    local -a sorted
+    local noglobstate
 
     log::trace "${FUNCNAME[0]}: ${*} - Sorting array reversed"
 
@@ -222,7 +222,7 @@ function array::sort-r {
 
     set -o noglob
 
-    declare IFS=$'\n'
+    local IFS=$'\n'
 
     mapfile -t sorted < <( sort -r <<< "${array[*]}" )
 
@@ -242,10 +242,10 @@ function array::pop_by_name {
     [[ $# -lt 2 ]] \
         && log::warning "%s: Missing arguments" "${FUNCNAME[0]}" && return 2
 
-    declare name="${1:-""}" ; shift
-    declare -a array=("${@}")
-    declare -a output
-    declare noglobstate
+    local name="${1:-}" ; shift
+    local -a array=("${@}")
+    local -a output
+    local noglobstate
 
     log::trace "${FUNCNAME[0]}: ${*} - Popping element ${name} from array"
 
@@ -253,7 +253,7 @@ function array::pop_by_name {
 
     set -o noglob
 
-    declare IFS=$'\n'
+    local IFS=$'\n'
 
     for item in "${array[@]}"
     do
@@ -279,9 +279,9 @@ function array::pop_by_position {
     [[ $# -lt 2 ]] \
         && log::warning "%s: Missing arguments" "${FUNCNAME[0]}" && return 2
 
-    declare -i pos="${1}" ; shift
-    declare -a array=("${@}")
-    declare -a output
+    local -i pos="${1}" ; shift
+    local -a array=("${@}")
+    local -a output
 
     log::trace "${FUNCNAME[0]}: ${*} - Popping element ${pos} from array"
 
@@ -299,7 +299,7 @@ function array::pop_by_position {
 function array::first {
     [[ $# -lt 1 ]] \
         && log::warning "%s: Missing arguments" "${FUNCNAME[0]}" && return 2
-    declare -a array=("${@}")
+    local -a array=("${@}")
 
     log::trace "${FUNCNAME[0]}: ${*} - Printing first element from array"
 
@@ -313,7 +313,7 @@ function array::first {
 function array::last {
     [[ $# -lt 1 ]] \
         &&  log::warning "%s: Missing arguments" "${FUNCNAME[0]}" && return 2
-    declare -a array=("${@}")
+    local -a array=("${@}")
 
     log::trace "${FUNCNAME[0]}: ${*} - Printing last element from array"
 
@@ -329,12 +329,12 @@ function array::get {
     [[ $# -lt 2 ]] \
         && log::warning "%s: Missing arguments" "${FUNCNAME[0]}" && return 2
 
-    declare -i pos="${1}" ; shift
-    declare -a array=("${@}")
+    local -i pos="${1}" ; shift
+    local -a array=("${@}")
 
     log::trace "${FUNCNAME[0]}: ${*} - Printing ${pos}th element from array"
 
-    declare -a array=("${@}")
+    local -a array=("${@}")
 
     printf "%s\n" "${array[$pos]}"
 

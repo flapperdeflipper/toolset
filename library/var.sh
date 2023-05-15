@@ -74,7 +74,8 @@ function var::is_bool {
 
     log::trace "${FUNCNAME[0]}: ${*} - Checking if value is a boolean"
 
-    if [[ "${value}" = true || "${value}" = false ]]
+    if [[ "${value}" == "true" ]] \
+    || [[ "${value}" == "false" ]]
     then
         return 0
     fi
@@ -94,13 +95,36 @@ function var::is_null {
 
     log::trace "${FUNCNAME[0]}: ${*} - Checking if value is null"
 
-    if [[ -z "${value}" || "${value}" = "null" ]]
+    if [[ -z "${value}" ]] \
+    || [[ "${value}" == "null" ]]
     then
         return 0
     fi
 
     return 1
 }
+
+
+##
+## Check if var is not null
+##
+
+function var::is_not_null {
+    [ "${#}" -ne 1 ] && return 2
+
+    local value="${1}"
+
+    log::trace "${FUNCNAME[0]}: ${*} - Checking if value is not null"
+
+    if [[ -n "${value}" ]] \
+    && [[ "${value}" != "null" ]]
+    then
+        return 0
+    fi
+
+    return 1
+}
+
 
 ##
 ## Check if var is defined
@@ -113,7 +137,7 @@ function var::defined {
 
     log::trace "${FUNCNAME[0]}: ${*} - Checking if variable is defined"
 
-    if [[ "${!variable-X}" = "${!variable-Y}" ]]
+    if [[ "${!variable-X}" == "${!variable-Y}" ]]
     then
         return 0
     fi
@@ -368,8 +392,8 @@ function var::none {
 function var::lt {
     [ "${#}" -ne 2 ] && return 2
 
-    local var1="${1:-""}"
-    local var2="${2:-""}"
+    local var1="${1:-}"
+    local var2="${2:-}"
 
     if ! var::is_int "${var1}" \
         || ! var::is_int "${var2}"
@@ -396,8 +420,8 @@ function var::lt {
 function var::le {
     [ "${#}" -ne 2 ] && return 2
 
-    local var1="${1:-""}"
-    local var2="${2:-""}"
+    local var1="${1:-}"
+    local var2="${2:-}"
 
     if ! var::is_int "${var1}" \
         || ! var::is_int "${var2}"
@@ -423,8 +447,8 @@ function var::le {
 function var::gt {
     [ "${#}" -ne 2 ] && return 2
 
-    local var1="${1:-""}"
-    local var2="${2:-""}"
+    local var1="${1:-}"
+    local var2="${2:-}"
 
     if ! var::is_int "${var1}" \
         || ! var::is_int "${var2}"
@@ -451,8 +475,8 @@ function var::gt {
 function var::ge {
     [ "${#}" -ne 2 ] && return 2
 
-    local var1="${1:-""}"
-    local var2="${2:-""}"
+    local var1="${1:-}"
+    local var2="${2:-}"
 
     if ! var::is_int "${var1}" \
         || ! var::is_int "${var2}"
@@ -479,8 +503,8 @@ function var::ge {
 function var::eq {
     [ "${#}" -ne 2 ] && return 2
 
-    local var1="${1:-""}"
-    local var2="${2:-""}"
+    local var1="${1:-}"
+    local var2="${2:-}"
 
     if ! var::is_int "${var1}" \
         || ! var::is_int "${var2}"
@@ -506,8 +530,8 @@ function var::eq {
 function var::ne {
     [ "${#}" -ne 2 ] && return 2
 
-    local var1="${1:-""}"
-    local var2="${2:-""}"
+    local var1="${1:-}"
+    local var2="${2:-}"
 
     if ! var::is_int "${var1}" \
         || ! var::is_int "${var2}"

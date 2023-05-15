@@ -24,7 +24,8 @@ function sanity::check {
     log::info "Running sanity checks"
 
     ## Run all defined sanity checks
-    for sanity_check in $( declare -F \
+    for sanity_check in $( \
+        declare -F \
         |  awk '/sanity::check::/ {print $NF}' \
         | grep -v '^sanity::check$' \
         | sort -u \

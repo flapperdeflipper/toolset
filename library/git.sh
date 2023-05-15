@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
 
-git::inside_work_tree() {
-    git rev-parse --is-inside-work-tree >/dev/null;
-}
-
-
 function git::baseurl {
     local url
 
@@ -47,19 +42,26 @@ function git::sanity {
     fi
 }
 
+git::inside_work_tree() {
+    git rev-parse \
+        --is-inside-work-tree \
+        >/dev/null;
+}
+
 function git::basedir {
-    git rev-parse --show-toplevel
+    git rev-parse \
+        --show-toplevel
 }
 
 function git::branch {
-    git rev-parse --abbrev-ref HEAD
+    git rev-parse \
+        --abbrev-ref HEAD
 }
 
 
 function git::default_branch {
     git remote show origin \
-        | grep 'HEAD branch:' \
-        | awk '{print $NF}'
+        | awk '/HEAD branch:/ { print $NF}'
 }
 
 
@@ -82,7 +84,7 @@ function git::is_clean {
 }
 
 function git::is_tag {
-    local -r input="${1:-""}"
+    local -r input="${1:-}"
 
     if ! var::eq "${#}" 1 \
       || var::is_empty "${input}"

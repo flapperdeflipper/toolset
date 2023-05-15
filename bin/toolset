@@ -4,7 +4,7 @@
 
 ##
 ## This is a wrapper script to use in scripts
-## By setting a shebang for #!/usr/bin/env toolset,
+## By setting a shebang for #!/usr/bin/env toolset
 ## You can use the libraries in the libraries directorty without need to
 ## source or import them manually.
 ##
@@ -12,7 +12,7 @@
 ## Set error handling if not used in an interactive or login shell
 ## Then it should be done in the shell config itself
 if [[ ! "${-}" =~ i ]] \
-&& [[ -z "${BATS_TEST_FILENAME:-""}" ]] \
+&& [[ -z "${BATS_TEST_FILENAME:-}" ]] \
 && ! shopt -q login_shell
 then
     set -o errexit
@@ -22,13 +22,13 @@ then
 fi
 
 ## Set the name of the script
-declare TOOLSET_SCRIPT_PATH="${1:-""}"
-declare TOOLSET_SCRIPT_NAME="$( basename "${TOOLSET_SCRIPT_PATH:-""}" )"
+declare TOOLSET_SCRIPT_PATH="${1:-}"
+declare TOOLSET_SCRIPT_NAME="$( basename "${TOOLSET_SCRIPT_PATH:-}" )"
 
 ## Set $0 to the script itself
-declare BASH_ARGV0="${1:-""}"
+declare BASH_ARGV0="${1:-}"
 
-## Shift the first argument if not empty (the scriptname itself, which we've set to $0)
+## Shift the first argument if not empty (remove the scriptname itself which we've set to $0)
 [[ "${#@}" -ne 0 ]] && shift
 
 ## Set the path to the toolset/bin directory
@@ -77,9 +77,10 @@ fi
 
 ## Import source script if executed as a script
 if [[ "${-}" != *i* ]] \
-&& [[ -z "${BATS_TEST_FILENAME:-""}" ]] \
+&& [[ -z "${BATS_TEST_FILENAME:-}" ]] \
 && ! shopt -q login_shell
 then
     # shellcheck source=/dev/null
-    source "${TOOLSET_SCRIPT_PATH}"
+    [ -e "${TOOLSET_SCRIPT_PATH}" ] \
+        && source "${TOOLSET_SCRIPT_PATH}"
 fi

@@ -66,8 +66,6 @@ function exit::trace {
 }
 
 
-
-
 ##
 ## Print warning to log and exit NOK
 ##
@@ -124,8 +122,8 @@ function exit::stdin {
 ##
 
 function exit::if_false {
-    local value="${1:-""}"
-    local message="${2:-""}"
+    local value="${1:-}"
+    local message="${2:-}"
     local severity="${3:-"ERROR"}"
     local exit_code="${4:-1}"
 
