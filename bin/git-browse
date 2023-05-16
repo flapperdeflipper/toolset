@@ -57,7 +57,7 @@ function git::provider_uri {
                     printf -- "-/branches"
                     ;;
                 --pipe|-ci)
-                    printf -- "pipelines"
+                    printf -- "-/pipelines"
                     ;;
                 --ci-visual|-v)
                     printf -- "-/ci/editor?tab=1"
@@ -69,10 +69,10 @@ function git::provider_uri {
                     printf -- "-/ci/editor?tab=2"
                     ;;
                 --mr|--pr|-p)
-                    printf -- "merge_requests"
+                    printf -- "-/merge_requests"
                     ;;
                 --mymr)
-                    printf -- "merge_requests?scope=all&state=opened&author_username=${GIT_USERNAME:-}"
+                    printf -- "-/merge_requests?scope=all&state=opened&author_username=${GIT_USERNAME:-}"
                     ;;
                 --ci|--config|-c)
                     printf -- "-/settings/ci_cd"
