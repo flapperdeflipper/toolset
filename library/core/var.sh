@@ -133,7 +133,7 @@ function var::is_not_null {
 function var::defined {
     [ "${#}" -ne 1 ] && return 2
 
-    local variable=${1}
+    local variable="${1}"
 
     log::trace "${FUNCNAME[0]}: ${*} - Checking if variable is defined"
 
