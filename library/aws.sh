@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash disable=SC2048
 
 import aws/cli.sh
 import aws/sts.sh

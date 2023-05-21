@@ -21,15 +21,61 @@ then
     set -o pipefail
 fi
 
-## Set the name of the script
-declare TOOLSET_SCRIPT_PATH="${1:-}"
-declare TOOLSET_SCRIPT_NAME="$( basename "${TOOLSET_SCRIPT_PATH:-}" )"
+## We have 3 use cases:
+## - Source in a script
+## - Source in a local environment
+## - Use the toolset script as an interpreter
 
-## Set $0 to the script itself
-declare BASH_ARGV0="${1:-}"
+if [[ "${0}" == "-bash" ]]
+then
+    ##
+    ## This is a login shell, we're sourced in a local bash environment"
+    ##
 
-## Shift the first argument if not empty (remove the scriptname itself which we've set to $0)
-[[ "${#@}" -ne 0 ]] && shift
+    ## Set the full path to the script that is being executed to an empty string
+    declare TOOLSET_SCRIPT_PATH=""
+
+    ## Set the name of the script to an empty string
+    declare TOOLSET_SCRIPT_NAME=""
+
+    ## Don't import the script as we are sourced so there is none
+    declare TOOLSET_IMPORT=0
+
+elif [[ "$( basename "${0}" )" == "toolset" ]]
+then
+    ##
+    ## This is a script using toolset as the interpreter
+    ##
+
+    ## Set the full path to the script that is being executed: ignore toolset
+    declare TOOLSET_SCRIPT_PATH="${1:-}"
+
+    ## Set the name of the script
+    declare TOOLSET_SCRIPT_NAME="$( basename "${TOOLSET_SCRIPT_PATH:-}" )"
+
+    ## Set $0 to the script itself
+    declare BASH_ARGV0="${1:-}"
+
+    ## Shift the first argument if not empty to remove the scriptname itself which we've set to $0
+    [[ "${#@}" -ne 0 ]] && shift
+
+    ## Import the script at the end
+    declare TOOLSET_IMPORT=1
+
+else
+    ##
+    ## This is a script that sources toolset
+    ##
+
+    ## Set the full name of the executed script
+    declare TOOLSET_SCRIPT_PATH="${0:-}"
+
+    ## Set the name of the script
+    declare TOOLSET_SCRIPT_NAME="$( basename "${TOOLSET_SCRIPT_PATH}" )"
+
+    ## Don't import the script as we are sourced
+    declare TOOLSET_IMPORT=0
+fi
 
 ## Set the path to the toolset/bin directory
 declare TOOLSET_BIN_PATH="$( dirname "${BASH_SOURCE[0]}" )"
@@ -37,50 +83,44 @@ declare TOOLSET_BIN_PATH="$( dirname "${BASH_SOURCE[0]}" )"
 ## Set the library path in our environment
 declare TOOLSET_LIBRARY_PATH="$( realpath "${TOOLSET_BIN_PATH}/../library" )"
 
-## Load the core library
-source "${TOOLSET_LIBRARY_PATH}/core.sh"
-
 ## Export toolset variables
-export TOOLSET_BIN_PATH
-export TOOLSET_LIBRARY_PATH
-export TOOLSET_SCRIPT_NAME
-export TOOLSET_SCRIPT_PATH
+export TOOLSET_BIN_PATH \
+       TOOLSET_LIBRARY_PATH \
+       TOOLSET_SCRIPT_NAME \
+       TOOLSET_SCRIPT_PATH
 
-## Import all shell libraries
-import cache
-import logging
-import exit
-import fs
-import var
-import string
-import array
-import net
-import proc
-import system
-import time
-import interact
-import depends
-import docker
-import sanity
+## Load the core libraries
+for corefile in "${TOOLSET_LIBRARY_PATH}/core"/*.sh
+do
+    # shellcheck source=/dev/null
+    source "${corefile}"
+done
+
+## Import all non-core shell libraries
 import aws
-import k8s
-import git
-import ssl
-import tests
+import cache
 import debug
+import docker
+import git
+import k8s
+import proc
+import sanity
+import ssl
+import system
+import tests
 
-if ( [[ -n "${TRACE}" ]] && [[ "${TRACE}" == 1 ]] ) \
-|| [[ "${-}" =~ x ]]
+if ( [[ -n "${TRACE}" ]] && [[ "${TRACE}" == 1 ]] ) || [[ "${-}" =~ x ]]
 then
     trap 'debug::handle_error "LINENO" "BASH_LINENO" "${BASH_COMMAND}" "${?}"' ERR
 fi
 
-## Import source script if executed as a script
-if [[ "${-}" != *i* ]] \
+## Import source script if required
+if [[ "${TOOLSET_IMPORT}" -eq 1 ]] \
+&& [[ -n "${TOOLSET_SCRIPT_PATH}" ]] \
+&& [[ -e "${TOOLSET_SCRIPT_PATH}" ]] \
 && [[ -z "${BATS_TEST_FILENAME:-}" ]] \
 && ! shopt -q login_shell
 then
     # shellcheck source=/dev/null
-    [ -e "${TOOLSET_SCRIPT_PATH}" ] \
-        && source "${TOOLSET_SCRIPT_PATH}"
+    source "${TOOLSET_SCRIPT_PATH}"
 fi

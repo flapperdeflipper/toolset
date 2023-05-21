@@ -4,6 +4,7 @@
 
 
 ## Print help output
+# shellcheck disable=SC2154
 function usage {
     cat <<EOF
 
@@ -58,8 +59,3 @@ function main {
 
 
 main "${@}"
-
-
-
-
-

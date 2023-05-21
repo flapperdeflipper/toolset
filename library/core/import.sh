@@ -6,6 +6,8 @@
 ##
 
 function core::is_sourceable {
+    [[ "${#}" -ne 1 ]] && return 2
+
     local file="${1}"; shift
 
     local filetype
@@ -30,6 +32,8 @@ function core::is_sourceable {
 
 
 function core::import {
+    [[ "${#}" -lt 1 ]] && return 2
+
     local source_file=""
 
     local -ra input=("${@}")

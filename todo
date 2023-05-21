@@ -1,2 +1,0 @@
-fix import so abspath outside libdir works
-fix error on import: return 1
