@@ -14,16 +14,16 @@ function usage() {
       ${TOOLSET_SCRIPT_NAME} --instance <instance> <arguments>
 
     Required arguments:
-      --instance, -i - The host to connect to with SSH (internal hostname, ip address or aws instance id)
+      --instance, -i       - The host to connect to with SSH
+                             (internal hostname, ip address or aws instance id)
 
     Options:
-      --profile            - Set the aws profile for cli
-      --region             - The aws region to work in (default: eu-west-1)
       --dry-run            - Don't do, just fake it
 
+    All other arguments are fed to aws cli
+
     Example:
-      ## Session
-      ${TOOLSET_SCRIPT_NAME} --instance i-0f8d56785c4959883 --session
+      ${TOOLSET_SCRIPT_NAME} --instance i-0f8d56785c4959883
 EOF
 
    exit "${1:-0}"
