@@ -51,7 +51,7 @@ function aws::ssm::session {
     log::trace "${FUNCNAME[0]}: ${*} - Opening ssm session to instance ${instance}"
 
     if ! aws::cli ssm start-session \
-            --target "${instance}" \
+            --target "${instance_id}" \
             --document-name SSM-SessionManagerRunShell \
             ${arguments[*]}
     then
