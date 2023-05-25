@@ -105,14 +105,21 @@ function main() {
     ## Show list on request
     if var::eq "${list}" 1
     then
+        log::info "${FUNCNAME[0]}: Listing all parameters matching ${path}"
         aws::ssm::parameter::list "${path}" "${arguments[*]}"
         exit 0
     fi
 
-    ## Exit if no value given
-    var::is_empty "${value}" && usage
+    ## If no value is given: retrieve parameter
+    if var::is_empty "${value}"
+    then
+        log::info "${FUNCNAME[0]}: Retrieving value for ${path}"
+        aws::ssm::parameter::get "${path}" "${arguments[@]}" || return 1
+    else
+        log::info "${FUNCNAME[0]}: Saving value to ${path}"
+        aws::ssm::parameter::put "${path}" "${value}" "${arguments[@]}" || return 1
+    fi
 
-    aws::ssm::parameter::put "${path}" "${value}" "${arguments[@]}" || return 1
 }
 
 main "${@}"

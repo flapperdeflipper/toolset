@@ -183,6 +183,7 @@ function aws::ssm::parameter::get() {
         aws::cli ssm get-parameter  \
             --name "${key}" \
             --output text \
+            --with-decryption \
             --query "Parameter.Value" \
             ${arguments[*]} \
     )" \

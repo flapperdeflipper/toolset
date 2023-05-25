@@ -2,8 +2,8 @@
 # vi: ft=bash
 # shellcheck shell=bash
 
-
 ## Print help output
+# shellcheck disable=SC2154
 function usage {
     cat <<EOF
 
@@ -33,7 +33,15 @@ function main {
     fi
 
     find . -follow -type f -name '*\.pyc' -exec rm -v {} +
-    find . -follow -type d -name '__pycache__' -exec rm -rvf {} +
+
+    for directory in __pycache__ .pytest_cache .mypy_cache
+    do
+        find . \
+            -follow \
+            -type d \
+            -name "${directory}" \
+            -exec rm -rvf {} +
+    done
 }
 
 main "${@}"
