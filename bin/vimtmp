@@ -18,7 +18,7 @@ function usage {
       -h, --help  - Show this menu
 
     Example:
-      ${TOOLSET_SCRIPT_NAME}
+      ${TOOLSET_SCRIPT_NAME:-}
 
 EOF
 
@@ -42,16 +42,24 @@ function main {
         mkdir -p "${HOME}/.tmp"
     fi
 
-    if var::is_empty "${name}"
+    local prefix=""
+
+    if ! var::is_empty "${name}"
     then
-        filename="$( mktemp -p "${HOME}/.tmp" )"
+        prefix="${name}-"
+    fi
+
+    if [[ -d "${HOME}/.obsidian/Main" ]]
+    then
+        filename="${HOME}/.obsidian/Main/Tmpdocs/${prefix}$( date +"%Y-%B-%d-%H%M.%S" ).md"
     else
-        filename="${HOME}/.tmp/${name}.$(date +'%Y%m%d%H%M%S')"
+        mkdir -p "${HOME}/.tmp" || exit 1
+        filename="${HOME}/.tmp/${prefix}.$(date +'%Y%m%d%H%M%S')"
     fi
 
     vim "${filename}"
 
-    echo "Filename: ${filename}"
+    echo "Filename saved as: ${filename}"
 
     exit 0
 }
