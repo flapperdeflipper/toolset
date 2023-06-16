@@ -1,4 +1,4 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
 # shellcheck shell=bash
 
@@ -32,6 +32,7 @@ EOF
 
 
 function main {
+    source ~/.toolset/bin/toolset
 
     if var::lt "${#}" 1 \
     || interact::usage "${@}"
