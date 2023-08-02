@@ -205,10 +205,10 @@ function aws::ssm::parameter::put() {
     local value="${1}"; shift
     local -a arguments=("${@}")
 
+    input_json="$( printf '{"Name":"%s","Value":"%s","Type":"SecureString"}' "${path}" "${value}" )"
+
     local ssm_args=(
-        --name "${path}"
-        --value "${value}"
-        --type SecureString
+        --cli-input-json "${input_json}"
         "${arguments[@]}"
     )
 

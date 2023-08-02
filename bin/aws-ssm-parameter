@@ -62,7 +62,6 @@ function main() {
 
             -l|--list)
                 list=1
-                shift
             ;;
 
             -p|--path)

@@ -22,6 +22,7 @@ function usage() {
                 --ci-merged|-cm    - Show ci merged yaml
                 --ci|--config|-c   - Show ci settings
                 --mr|--pr|-p       - Show merge requests
+
                 --cr|--registry|-r - Show container registry
                 --issues|-i        - Show issues
 
