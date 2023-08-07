@@ -4,6 +4,7 @@
 
 
 ## Print help output
+# shellcheck disable=SC2154
 function usage {
     cat <<EOF
 
@@ -32,17 +33,19 @@ function main {
         usage
     fi
 
+    local stashed=0
+
     local branch
           branch="$( git::branch )"
 
     if git::is_dirty
     then
         log::warning "Current workdir on ${branch} is dirty: Stashing changes"
-    fi
-
-    if ! git stash
-    then
-        exit::error "Failed to stash current changes"
+        if ! git stash
+        then
+            exit::error "Failed to stash current changes"
+        fi
+        stashed=1
     fi
 
     local default_branch
@@ -57,7 +60,11 @@ function main {
     local issue="${input##*/}"
 
     git checkout -b "feature/${issue}"
-    git stash pop
+
+    if [[ "${stashed}" -eq 1 ]]
+    then
+        git stash pop
+    fi
 }
 
 main "${@}"
