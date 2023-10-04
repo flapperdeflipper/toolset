@@ -4,7 +4,7 @@
 
 ## Print help output
 # shellcheck disable=SC2154
-function usage {
+function usage() {
     cat <<EOF
 
     Remove all python cache files from a directory
@@ -25,7 +25,7 @@ EOF
 }
 
 
-function main {
+function main() {
     if var::gt "${#}" 0 \
     || interact::usage "${@}"
     then
@@ -34,7 +34,7 @@ function main {
 
     find . -follow -type f -name '*\.pyc' -exec rm -v {} +
 
-    for directory in __pycache__ .pytest_cache .mypy_cache
+    for directory in __pycache__ .pytest_cache .mypy_cache .ruff_cache
     do
         find . \
             -follow \
