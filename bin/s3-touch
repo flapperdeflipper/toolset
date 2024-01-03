@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+function s3touch() {
+  aws s3 cp \
+    --acl bucket-owner-full-control \
+    --metadata-directive REPLACE \
+    --metadata 'touched=touched' \
+    --recursive --exclude="*" \
+    --include="$2" \
+    "${@:3}" \
+    "$1" "$1"
+}
+
+s3touch "${@}"

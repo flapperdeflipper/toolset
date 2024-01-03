@@ -60,6 +60,12 @@ function git::provider_uri {
                 --pipe|-ci)
                     printf -- "-/pipelines"
                     ;;
+                --mainpipe)
+                    printf -- "-/pipelines?page=1&scope=all&ref=master"
+                    ;;
+                --mypipe)
+                    printf -- "/-pipelines?pipelines?page=1&scope=all&username=${GIT_USERNAME:-}"
+                    ;;
                 --ci-visual|-v)
                     printf -- "-/ci/editor?tab=1"
                     ;;

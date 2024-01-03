@@ -23,7 +23,7 @@ EOF
 }
 
 function main {
-    var::eq "${#}" 0 && usage
+    var::gt "${#}" 0 && usage
 
     local directory="."
 
