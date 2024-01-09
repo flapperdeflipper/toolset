@@ -95,6 +95,7 @@ function k8s::grep {
     local arguments=""
     local object="pods"
     local regex="."
+    local sort=""
 
     local watch=0
     local refresh=1
@@ -118,6 +119,15 @@ function k8s::grep {
             --watch)
                 watch=1
             ;;
+            --sort|--sort-by)
+                sort="${2}"
+                shift
+            ;;
+
+            --no-sort)
+                sort="none"
+            ;;
+
             --refresh)
                 refresh="${2}"
                 shift
@@ -133,6 +143,12 @@ function k8s::grep {
 
     var::is_empty "${arguments}" && arguments=" --all-namespaces"
     var::equals "${wide}" "1"    && arguments="${arguments} -o wide"
+
+    if var::is_empty "${sort}" \
+    || var::equals "${sort}" "age"
+    then
+        arguments="${arguments} --sort-by=.metadata.creationTimestamp"
+    fi
 
     local cmd="kubectl get ${object} ${arguments}"
 

@@ -47,6 +47,7 @@ function main {
         --regex "${regex}" \
         --no-headers \
         --label-columns worker-group,node.kubernetes.io/lifecycle,topology.kubernetes.io/zone,node.kubernetes.io/instance-type,beta.kubernetes.io/arch \
+        --sort-by=.metadata.creationTimestamp \
         ${arguments}
 
 }
