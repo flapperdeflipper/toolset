@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+#!/usr/bin/env bash
+
+## Convert to h264 to reduce the size
+convert="${1:-}"; shift || true
+
+## Video size
+size="${1:-"1280x720"}"; shift || true
+
+## Camera mode (can be tracking or overview)
+mode="${1:-"overview"}"; shift || true
+
+## Where to store the file
+output_file="${HOME}/$( basename "$( pwd )" ).mp4"
+
+
+# Hide options:
+# --hide bloom,date,dirnames,files,filenames,mouse,progress,tree,users,usernames
+
+gource \
+    -s .06 \
+    -"${size}" \
+    --auto-skip-seconds .1 \
+    --camera-mode "${mode}" \
+    --multi-sampling \
+    --stop-at-end \
+    --key \
+    --highlight-users \
+    --filename-time 2 \
+    --hide mouse,progress \
+    --file-idle-time 0 \
+    --max-files 0 \
+    --background-colour 000000 \
+    --font-size 10 \
+    --output-ppm-stream - \
+    --output-framerate 30 \
+| avconv \
+    -y \
+    -r 30 \
+    -f image2pipe \
+    -vcodec ppm \
+    -i - \
+    -b 65536K \
+    /tmp/output.mp4
+
+if [[ -n "${convert}" ]] \
+&& [[ -f /tmp/output.mp4 ]]
+then
+    ffmpeg -i /tmp/output.mp4 -vcodec libx264 -crf 20 "${output_file}" && rm /tmp/output.mp4
+else
+    mv /tmp/output.mp4 "${output_file}"
+fi
