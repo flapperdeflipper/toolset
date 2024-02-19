@@ -2,7 +2,6 @@
 # vi: ft=bash
 # shellcheck shell=bash
 
-
 ## Print help output
 function usage {
     cat <<EOF
@@ -25,30 +24,28 @@ EOF
 }
 
 function main {
-    if ! var::ge "${#}" 0 \
-    || interact::usage "${@}"
-    then
+    if ! var::ge "${#}" 0 ||
+        interact::usage "${@}"; then
         usage
     fi
 
     local branch
-          branch="$( git::branch )"
+    branch="$(git::branch)"
 
     local default_branch
-          default_branch="$( git::default_branch )"
+    default_branch="$(git::default_branch)"
 
-    git::sanity "${branch}" "${default_branch}"
+    #git::sanity "${branch}" "${default_branch}"
 
     local -a cmd=(
-        git push \
+        git push
         --set-upstream origin "${branch}"
     )
 
-    if [[ "${*}" =~ --mr ]]
-    then
+    if [[ "${*}" =~ --mr ]]; then
         cmd+=(
-          -o merge_request.create \
-          -o merge_request.target="${default_branch}"
+            -o merge_request.create
+            -o merge_request.target="${default_branch}"
         )
     fi
 

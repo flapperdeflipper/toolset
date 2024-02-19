@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/opt/homebrew/bin/bash
 # vi: ft=bash
 # shellcheck shell=bash
 
@@ -42,16 +42,23 @@ function main {
 
     if ! fs::exists "${HOME}/.gnulinks"
     then
-        exit::error "Not found: ${HOME}/.gnulinks"
+        if ! fs::exists "$HOME/.dotfiles/profile/.gnulinks"
+        then
+            exit::error "Not found: .gnulinks"
+        else
+          file=$HOME/.dotfiles/profile/.gnulinks
+        fi
+    else
+        file=$HOME/.gnulinks
     fi
 
     log::info "Updating symlinks for gnu utils"
 
     local src dst
 
-    grep -vE '^#|^$' "${HOME}/.gnulinks" | while read -r util
+    grep -vE '^#|^$' $file | while read -r util
     do
-        src="$( brew --prefix )/bin/g${util}"
+        src="$( /opt/homebrew/bin/brew --prefix )/bin/g${util}"
         dst="/usr/local/bin/${util}"
 
         if var::matches "${1:-""}" "-a" \
