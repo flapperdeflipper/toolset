@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2312,SC2230
 
 ##
 ## Check if user is root
@@ -7,7 +8,7 @@
 function depends::is_root {
     log::trace "${FUNCNAME[0]}: ${*} - Checking if current user is superuser"
 
-    if [ "$( whoami )" == "root" ]
+    if [[ "$( whoami )" == "root" ]]
     then
         return 0
     fi
@@ -136,4 +137,3 @@ function depends::check_list {
         return 0
     fi
 }
-

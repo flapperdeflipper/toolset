@@ -1,6 +1,10 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
 
 
 ## Print help output
@@ -13,7 +17,7 @@ function usage {
     machine to a given port to provide network access to a pod or service in a
     k8s cluster.
 
-    ${TOOLSET_SCRIPT_NAME} -l <local port> -r <remote port> -n <namespace> [-p <pod>|-s <service>]
+    ${TOOLSET_SCRIPT_NAME:-${0}} -l <local port> -r <remote port> -n <namespace> [-p <pod>|-s <service>]
 
     Arguments:
     -n, --namespace     The namespace to search for pods in
@@ -27,7 +31,7 @@ function usage {
     -ss, --statefulset The statefulset to tunnel to
 
     Example:
-    ${TOOLSET_SCRIPT_NAME} -n kube-system --pod coredns-f9fd979d6-4ngjr -l 1053 -r 53
+    ${TOOLSET_SCRIPT_NAME:-${0}} -n kube-system --pod coredns-f9fd979d6-4ngjr -l 1053 -r 53
 
     Note: You cannot use both --service and --pod at the same time!
 
@@ -38,7 +42,7 @@ EOF
 
 
 function main {
-    if [ "${#}" -eq 0 ] ; then
+    if [[ "${#}" -eq 0 ]] ; then
         usage
     fi
 
@@ -50,7 +54,7 @@ function main {
     local object_type=""
 
     ## Parse command line arguments
-    while [ "${1:-""}" != "" ]
+    while [[ "${1:-""}" != "" ]]
     do
         case "$1"
         in

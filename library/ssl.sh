@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2312
 
 ################################################################################
 ## Check files                                                                ##
@@ -693,4 +694,3 @@ function ssl::pem_chain {
             }
     '
 }
-

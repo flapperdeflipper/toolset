@@ -1,6 +1,10 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash disable=SC2154
+# shellcheck shell=bash disable=SC1091,SC2154,SC2310,SC2312
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
 
 ####################################################################
 # bl - BLACKLIST CHECK UNIX/LINUX UTILITY                          #
@@ -138,9 +142,9 @@ function reverse_ip {
     local ip="${1}"
     local reverse
 
-    reverse="$(
+    reverse="$( \
         echo "${ip}" \
-        | sed -ne "s#^\([0-9]\{1,3\}\)\.\([0-9]\{1,3\}\)\.\([0-9]\{1,3\}\)\.\([0-9]\{1,3\}\)\$#\4.\3.\2.\1#p"
+        | sed -ne 's#^\([0-9]\{1,3\}\)\.\([0-9]\{1,3\}\)\.\([0-9]\{1,3\}\)\.\([0-9]\{1,3\}\)\$#\4.\3.\2.\1#p' \
     )"
 
     if [[ -z "${reverse}" ]]
@@ -204,14 +208,14 @@ function usage {
     This script checks an ip or hostname agains a multitude of dnsbl blacklists
     to ensure the ip is not blacklisted.
 
-    ${TOOLSET_SCRIPT_NAME} <ip> [-h|--help]
+    ${TOOLSET_SCRIPT_NAME:-${0}} <ip> [-h|--help]
 
     Arguments:
       -h, --help  - Show this menu
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} 1.2.3.4
-      ${TOOLSET_SCRIPT_NAME} google.com
+      ${TOOLSET_SCRIPT_NAME:-${0}} 1.2.3.4
+      ${TOOLSET_SCRIPT_NAME:-${0}} google.com
 
 EOF
 
@@ -262,4 +266,3 @@ function main {
 
 
 main "${@}"
-

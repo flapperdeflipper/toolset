@@ -1,6 +1,10 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
 
 
 ## Print help output
@@ -9,13 +13,13 @@ function usage {
 
     Show a list of what was done the day before
 
-    ${TOOLSET_SCRIPT_NAME}
+    ${TOOLSET_SCRIPT_NAME:-${0}}
 
    Arguments:
     -h, --help  - Show this menu
 
     Example:
-      ${TOOLSET_SCRIPT_NAME}
+      ${TOOLSET_SCRIPT_NAME:-${0}}
 
 EOF
 
@@ -31,7 +35,7 @@ function main {
 
     local since
 
-    if var::equals "Mon" "$(date +%a)"
+    if var::equals "Mon" "$(date +%a || true )"
     then
         since="last friday"
     else
@@ -44,7 +48,7 @@ function main {
         --reverse \
         --branches \
         --since="${since}" \
-        --author="$( git config --get user.email )" \
+        --author="$( git config --get user.email || true )" \
         --format=format:"${format}" \
         --date=local
 

@@ -1,6 +1,10 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash disable=SC2154
+# shellcheck shell=bash disable=SC1091,SC2086
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
 
 
 ## Print help output
@@ -12,13 +16,13 @@ function usage {
     This script does a grep in a directory and opens all files that
     are matching a given regular expression.
 
-    ${TOOLSET_SCRIPT_NAME} <regex> <find args> [-h|--help]
+    ${TOOLSET_SCRIPT_NAME:-${0}} <regex> <find args> [-h|--help]
 
     Arguments:
       -h, --help  - Show this menu
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} kube
+      ${TOOLSET_SCRIPT_NAME:-${0}} kube
 
 EOF
 
@@ -48,7 +52,7 @@ function main {
     files=$( \
         command ${cmd[@]} \
         | grep -v '\.git/' \
-        | grep -sI ${regex} \
+        | grep -sI "${regex}" \
         | cut -d: -f1  \
         | sort -u \
         | xargs \
@@ -56,7 +60,7 @@ function main {
 
     if var::has_value "${files}"
     then
-        log::info "Found $( echo "${files}" | wc -l ) files"
+        log::info "Found $( echo "${files}" | wc -l || true ) files"
         vim ${files}
     else
         log::warning "No files found matching ${regex}"

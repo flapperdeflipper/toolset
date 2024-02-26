@@ -1,11 +1,16 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091,SC2001
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
+
 
 function context {
     local cluster mapping context
 
-    cluster="$( echo "${TOOLSET_SCRIPT_NAME}" | sed -e 's/kube//' )"
+    cluster="$( echo "${TOOLSET_SCRIPT_NAME:-${0}}" | sed -e 's/kube//' )"
 
     if [[ -f "${HOME}/.kubemap" ]]
     then
@@ -45,7 +50,7 @@ EOF
 
 function usage {
     local cluster
-          cluster="$( context "${TOOLSET_SCRIPT_NAME}" )"
+          cluster="$( context "${TOOLSET_SCRIPT_NAME:-${0}}" )"
 
     cat <<EOF
 
@@ -53,14 +58,14 @@ function usage {
 
     This script manages a specific k8s cluster by silently switching the context.
 
-    ${TOOLSET_SCRIPT_NAME} [kubectl arguments]
+    ${TOOLSET_SCRIPT_NAME:-${0}} [kubectl arguments]
 
     Arguments:
       -h, --help  - Show this menu
       -i, --info  - Show kubectl help
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} get pods
+      ${TOOLSET_SCRIPT_NAME:-${0}} get pods
 
 EOF
 
@@ -70,7 +75,7 @@ EOF
 
 function main {
     local context
-          context="$( context  "${TOOLSET_SCRIPT_NAME}" )"
+          context="$( context  "${TOOLSET_SCRIPT_NAME:-${0}}" )"
 
     if [[ "${context}" == "cluster" ]]
     then

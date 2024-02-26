@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash disable=SC2048
+# shellcheck shell=bash disable=SC2048,SC2312
 
 
 ##
@@ -8,7 +8,7 @@
 ##
 
 function aws::cli {
-    [ "${#}" -ge 1 ] || return 2
+    [[ "${#}" -ge 1 ]] || return 2
 
     depends::check "aws" || return 1
 
@@ -26,6 +26,7 @@ function aws::check_for_admin() {
 
     log::trace "${FUNCNAME[0]}: ${*} - Retrieving caller identity"
 
+    # shellcheck disable=SC2086
     if ! role="$( aws::cli sts get-caller-identity ${*} | jq -r '.Arn' )" \
     || [[ -z "${role}" ]]
     then

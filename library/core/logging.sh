@@ -49,7 +49,7 @@ function log::logger {
     local cr="${3:-1}"
 
     ## Skip logs with trace level if trace flag is not set
-    if [[ "${level}" == "TRACE" ]] && [[ "${TRACE}" != 1 ]]
+    if [[ "${level}" == "TRACE" ]] && [[ "${TRACE:-}" != 1 ]]
     then
         return 0
     fi
@@ -61,7 +61,7 @@ function log::logger {
     fi
 
     ## Check if cr is 1
-    if [ "${cr}" == 1 ];
+    if [[ "${cr}" == 1 ]]
     then
         linefeed='\n'
     else
@@ -90,6 +90,7 @@ function log::logger {
         "${bold}${white}%s${reset}${linefeed}"
     )
 
+    # shellcheck disable=SC2059
     printf \
         "${logline[*]}" \
         "${timestamp}" \

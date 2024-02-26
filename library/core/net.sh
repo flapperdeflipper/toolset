@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2312
 
 ################################################################################
 ## Network and Internet related helpers                                       ##
@@ -28,17 +29,17 @@ function net::is_ip4 {
     # Check if an IP(4) address is valid
     # https://www.linuxjournal.com/content/validating-ip-address-bash-script
 
-    if [[ "$ip" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]
+    if [[ "${ip}" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]
     then
-        OIFS="$IFS"
+        OIFS="${IFS}"
 
         # Split IP on dots
         IFS='.'
 
         # shellcheck disable=SC2206
-        segments=( $ip )
+        segments=( "${ip}" )
 
-        IFS="$OIFS"
+        IFS="${OIFS}"
 
         # Check if all parts are in the allowed range
         [[ "${segments[0]}" -le 255 ]] \
@@ -50,7 +51,7 @@ function net::is_ip4 {
         stat="$?"
     fi
 
-    return "$stat"
+    return "${stat}"
 }
 
 
@@ -97,7 +98,7 @@ function net::is_email {
 
     local regex="^(([A-Za-z0-9]+((\.|\-|\_|\+)?[A-Za-z0-9]?)*[A-Za-z0-9]+)|[A-Za-z0-9]+)@(([A-Za-z0-9]+)+((\.|\-|\_)?([A-Za-z0-9]+)+)*)+\.([A-Za-z]{2,})+$"
 
-    [[ "${address}" =~ $regex ]]
+    [[ "${address}" =~ ${regex} ]]
 }
 
 
@@ -146,7 +147,7 @@ function net::http::ttfb {
 function net::http::downforme {
     depends::check::silent curl || return 1
 
-    if [ ${#} = 0 ]
+    if [[ ${#} = 0 ]]
     then
         echo -e "usage: downforme website_url"
     else
@@ -155,7 +156,7 @@ function net::http::downforme {
                 | grep -o 'It.s just you' \
             )"
 
-        if [ ${#JUSTYOU} != 0 ]
+        if [[ ${#JUSTYOU} != 0 ]]
         then
             echo -e "It's just you. \n${1} is up."
         else
@@ -163,4 +164,3 @@ function net::http::downforme {
         fi
     fi
 }
-

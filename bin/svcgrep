@@ -1,6 +1,11 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
+
 
 ## Print help output
 function usage {
@@ -12,13 +17,13 @@ function usage {
     that match a given regular expression. It can be used for debugging and
     generating an overview of all available services in a cluster.
 
-    ${TOOLSET_SCRIPT_NAME} <regex> [<options>]
+    ${TOOLSET_SCRIPT_NAME:-${0}} <regex> [<options>]
 
    Arguments:
     -h, --help  - Show this menu
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} -r kube -n default
+      ${TOOLSET_SCRIPT_NAME:-${0}} -r kube -n default
 
 EOF
 
@@ -43,6 +48,7 @@ function main {
         arguments=" -A -o wide"
     fi
 
+    # shellcheck disable=SC2086
     k8s::grep --object svc --regex "${regex}" ${arguments}
 }
 

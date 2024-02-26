@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash disable=SC2048
+# shellcheck shell=bash disable=SC2048,SC2312,SC2086
 
 ################################################################################
 ## ECR                                                                        ##
@@ -25,6 +25,7 @@ function aws::ecr::list_repos {
 
 function aws::ecr::list_tags {
     local registry="${1}"; shift
+    local region="${1}"; shift
     local arguments=("${@}")
 
     local account_id

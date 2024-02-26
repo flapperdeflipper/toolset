@@ -1,6 +1,11 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
+
 
 ## Print help output
 function usage {
@@ -14,7 +19,7 @@ function usage {
     certificate on a machine. This cert can be used for signing
     new utilty certificates in a cert chain without having to use the root ca script.
 
-    ${TOOLSET_SCRIPT_NAME} -b <basedir> [-c <curve>]
+    ${TOOLSET_SCRIPT_NAME:-${0}} -b <basedir> [-c <curve>]
 
     Arguments:
       -b, --basedir - The basedir from where to create certs
@@ -23,7 +28,7 @@ function usage {
       -c, --curve   - The curve to use (Default: prime256v1)
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} --basedir /mnt/storage/certs
+      ${TOOLSET_SCRIPT_NAME:-${0}} --basedir /mnt/storage/certs
 
 EOF
 
@@ -47,7 +52,7 @@ function main {
     depends::check_list::silent openssl pwgen chronic || return 1
 
     ## Parse command line arguments
-    while [ "${1:-""}" != "" ]
+    while [[ "${1:-""}" != "" ]]
     do
        case "${1}" in
            -h|--help)

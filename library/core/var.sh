@@ -26,7 +26,7 @@ function var::is_stdin {
 ##
 
 function var::is_true {
-    [ ${#} -ne 1 ] && return 2
+    [[ ${#} -ne 1 ]] && return 2
 
     local value="${1}"
 
@@ -47,7 +47,7 @@ function var::is_true {
 ##
 
 function var::is_false {
-    [ "${#}" -ne 1 ] && return 2
+    [[ "${#}" -ne 1 ]] && return 2
 
     local value="${1:-null}"
 
@@ -68,7 +68,7 @@ function var::is_false {
 ##
 
 function var::is_bool {
-    [ "${#}" -ne 1 ] && return 2
+    [[ "${#}" -ne 1 ]] && return 2
 
     local value="${1}"
 
@@ -89,7 +89,7 @@ function var::is_bool {
 ##
 
 function var::is_null {
-    [ "${#}" -ne 1 ] && return 2
+    [[ "${#}" -ne 1 ]] && return 2
 
     local value="${1}"
 
@@ -110,7 +110,7 @@ function var::is_null {
 ##
 
 function var::is_not_null {
-    [ "${#}" -ne 1 ] && return 2
+    [[ "${#}" -ne 1 ]] && return 2
 
     local value="${1}"
 
@@ -131,7 +131,7 @@ function var::is_not_null {
 ##
 
 function var::defined {
-    [ "${#}" -ne 1 ] && return 2
+    [[ "${#}" -ne 1 ]] && return 2
 
     local variable="${1}"
 
@@ -151,7 +151,7 @@ function var::defined {
 ##
 
 function var::has_value {
-    [ "${#}" -ne 1 ] && return 2
+    [[ "${#}" -ne 1 ]] && return 2
 
     local value=${1}
 
@@ -170,7 +170,7 @@ function var::has_value {
 ##
 
 function var::is_empty {
-    [ "${#}" -ne 1 ] && return 2
+    [[ "${#}" -ne 1 ]] && return 2
 
     local value=${1}
 
@@ -189,7 +189,7 @@ function var::is_empty {
 ##
 
 function var::equals {
-    [ "${#}" -ne 2 ] && return 2
+    [[ "${#}" -ne 2 ]] && return 2
 
     local value=${1}
     local equals=${2}
@@ -210,14 +210,14 @@ function var::equals {
 ##
 
 function var::matches {
-    [ "${#}" -ne 2 ] && return 2
+    [[ "${#}" -ne 2 ]] && return 2
 
     local input="${1}"
     local regex="${2}"
 
     log::trace "${FUNCNAME[0]}: ${*} - Checking if variable matches regex"
 
-    if [[ "${input}" =~ $regex ]]
+    if [[ "${input}" =~ ${regex} ]]
     then
         return 0
     fi
@@ -230,7 +230,7 @@ function var::matches {
 ##
 
 function var::is_numeric {
-    [ "${#}" -ne 1 ] && return 2
+    [[ "${#}" -ne 1 ]] && return 2
 
     local input="${1}"
 
@@ -246,7 +246,7 @@ function var::is_numeric {
 ##
 
 function var::is_alphanumeric {
-    [ "${#}" -ne 1 ] && return 2
+    [[ "${#}" -ne 1 ]] && return 2
 
     local input="${1}"
 
@@ -263,7 +263,7 @@ function var::is_alphanumeric {
 ##
 
 function var::is_alpha {
-    [ "${#}" -ne 1 ] && return 2
+    [[ "${#}" -ne 1 ]] && return 2
 
     local input="${1}"
 
@@ -280,7 +280,7 @@ function var::is_alpha {
 ##
 
 function var::is_int {
-    [ "${#}" -ne 1 ] && return 2
+    [[ "${#}" -ne 1 ]] && return 2
 
     local input="${1}"
 
@@ -297,7 +297,7 @@ function var::is_int {
 ##
 
 function var::is_float {
-    [ "${#}" -ne 1 ] && return 2
+    [[ "${#}" -ne 1 ]] && return 2
 
     local input="${1}"
 
@@ -317,7 +317,7 @@ function var::is_float {
 ##
 
 function var::all {
-    [ "${#}" -le 1 ] && return 2
+    [[ "${#}" -le 1 ]] && return 2
 
     local -a input=("${@}")
 
@@ -340,7 +340,7 @@ function var::all {
 ##
 
 function var::any {
-    [ "${#}" -le 1 ] && return 2
+    [[ "${#}" -le 1 ]] && return 2
 
     local -a input=("${@}")
 
@@ -363,7 +363,7 @@ function var::any {
 ##
 
 function var::none {
-    [ "${#}" -le 1 ] && return 2
+    [[ "${#}" -le 1 ]] && return 2
 
     local -a input=("${@}")
 
@@ -390,7 +390,7 @@ function var::none {
 ##
 
 function var::lt {
-    [ "${#}" -ne 2 ] && return 2
+    [[ "${#}" -ne 2 ]] && return 2
 
     local var1="${1:-}"
     local var2="${2:-}"
@@ -418,7 +418,7 @@ function var::lt {
 ##
 
 function var::le {
-    [ "${#}" -ne 2 ] && return 2
+    [[ "${#}" -ne 2 ]] && return 2
 
     local var1="${1:-}"
     local var2="${2:-}"
@@ -445,7 +445,7 @@ function var::le {
 ##
 
 function var::gt {
-    [ "${#}" -ne 2 ] && return 2
+    [[ "${#}" -ne 2 ]] && return 2
 
     local var1="${1:-}"
     local var2="${2:-}"
@@ -473,7 +473,7 @@ function var::gt {
 ##
 
 function var::ge {
-    [ "${#}" -ne 2 ] && return 2
+    [[ "${#}" -ne 2 ]] && return 2
 
     local var1="${1:-}"
     local var2="${2:-}"
@@ -501,7 +501,7 @@ function var::ge {
 ##
 
 function var::eq {
-    [ "${#}" -ne 2 ] && return 2
+    [[ "${#}" -ne 2 ]] && return 2
 
     local var1="${1:-}"
     local var2="${2:-}"
@@ -528,7 +528,7 @@ function var::eq {
 ##
 
 function var::ne {
-    [ "${#}" -ne 2 ] && return 2
+    [[ "${#}" -ne 2 ]] && return 2
 
     local var1="${1:-}"
     local var2="${2:-}"
@@ -556,7 +556,7 @@ function var::ne {
 ##
 
 function var::sum {
-    [ "${#}" -lt 2 ] && return 2
+    [[ "${#}" -lt 2 ]] && return 2
 
     local -a array=("${@}")
     local -i total=0
@@ -584,7 +584,7 @@ function var::sum {
 ##
 
 function var::incr {
-    { [ "${#}" -lt 1 ] || [ "${#}" -gt 2 ]; } && return 2
+    { [[ "${#}" -lt 1 ]] || [[ "${#}" -gt 2 ]]; } && return 2
 
     local -i var="${1}"
     local -i amount="${2:-1}"
@@ -610,7 +610,7 @@ function var::incr {
 ##
 
 function var::decr {
-    { [ "${#}" -lt 1 ] || [ "${#}" -gt 2 ]; } && return 2
+    { [[ "${#}" -lt 1 ]] || [[ "${#}" -gt 2 ]]; } && return 2
 
     local -i var="${1}"
     local -i amount="${2:-1}"
@@ -630,4 +630,3 @@ function var::decr {
 
     return "${?}"
 }
-

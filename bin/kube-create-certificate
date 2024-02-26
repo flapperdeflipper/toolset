@@ -1,6 +1,10 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
 
 
 ## Print help output
@@ -14,7 +18,7 @@ function usage {
     and required chainfile and adds it base64 encoded to a k8s secret.
     It can write files or output the secret on stdout.
 
-    ${TOOLSET_SCRIPT_NAME} --name some-secret --namespace <namespace> --key <file> --cert <file>
+    ${TOOLSET_SCRIPT_NAME:-${0}} --name some-secret --namespace <namespace> --key <file> --cert <file>
 
     Arguments:
       -s, --name      - The name of the secret
@@ -27,7 +31,7 @@ function usage {
       -o, --output    - The output to write to (Default: /dev/stdout)
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} -s some --key key.pem --cert cert.pem
+      ${TOOLSET_SCRIPT_NAME:-${0}} -s some --key key.pem --cert cert.pem
 
 EOF
 
@@ -47,7 +51,7 @@ function main {
     local output=/dev/stdout
 
     ## Parse command line arguments
-    while [ "${1:-""}" != "" ]
+    while [[ "${1:-""}" != "" ]]
     do
        case "${1}" in
            -o|--output)
@@ -146,7 +150,7 @@ function main {
 
     # shellcheck disable=SC2086
     if ! kubectl create secret tls \
-        "${name}" ${arguments[*]} > "${output}"
+        "${name}" "${arguments[@]}" > "${output}"
     then
         log::error "${FUNCNAME[0]}: Failed to create secret from arguments"
         return 1

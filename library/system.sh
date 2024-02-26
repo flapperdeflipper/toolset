@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2312
 
 function system::detect_mac_version {
     depends::check "sw_vers" || return 1
@@ -18,4 +19,3 @@ function system::is_mac {
 
     return 1
 }
-

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+# shellcheck disable=SC2312
 
 ##
 ## Check if array contains element
@@ -41,7 +41,7 @@ function array::deduplicate {
 
     for i in "${@}"
     do
-        { [[ -z ${i:-} || ${arr_tmp[${i}]} ]]; } && continue
+        { [[ -z ${i:-} ]] || ${arr_tmp[${i}]} ; } && continue
 
         arr_unique+=("${i}") && arr_tmp[${i}]=x
     done
@@ -78,7 +78,7 @@ function array::is_empty {
 
     local array=("${@}")
 
-    if [ ${#array[@]} -eq 0 ]
+    if [[ ${#array[@]} -eq 0 ]]
     then
         return 0
     else
@@ -101,7 +101,7 @@ function array::not_empty {
 
     local array=("${@}")
 
-    if [ ${#array[@]} -eq 0 ]
+    if [[ ${#array[@]} -eq 0 ]]
     then
         return 1
     else
@@ -145,12 +145,12 @@ function array::reverse {
 
     log::trace "${FUNCNAME[0]}: ${*} - Reversing array"
 
-    while [[ $min -lt $max ]]; do
+    while [[ "${min}" -lt "${max}" ]]; do
         # Swap current first and last elements
-        x="${array[$min]}"
+        x="${array[${min}]}"
 
-        array[$min]="${array[$max]}"
-        array[$max]="$x"
+        array[min]="${array[${max}]}"
+        array[max]="${x}"
 
         # Move closer
         ((min++, max--))
@@ -285,7 +285,7 @@ function array::pop_by_position {
 
     log::trace "${FUNCNAME[0]}: ${*} - Popping element ${pos} from array"
 
-    unset "array[$pos]"
+    unset "array[${pos}]"
 
     printf "%s\n" "${array[@]}"
 }
@@ -336,6 +336,5 @@ function array::get {
 
     local -a array=("${@}")
 
-    printf "%s\n" "${array[$pos]}"
-
+    printf "%s\n" "${array[${pos}]}"
 }

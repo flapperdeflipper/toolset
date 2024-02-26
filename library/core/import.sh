@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2154
+# vi: ft=bash
+# shellcheck shell=bash disable=SC1091,SC2154,SC2230,SC2312
 
 ##
 ## Check if a file can be sourced
@@ -15,6 +16,7 @@ function core::is_sourceable {
             command file "${file}" \
               | awk -F ': ' '{ print $2 }' \
               | sed -e 's/\ \ /\ /g' \
+              || true
           )"
 
     if [[ "${filetype}" =~ "toolset script" ]] \
@@ -66,7 +68,7 @@ function core::import {
         elif which "${file}" >/dev/null 2>&1
         then
             ## Check if file without extension is a script
-            if core::is_sourceable "$( which "${file}" )"
+            if core::is_sourceable "$( command -v "${file}" )"
             then
                 ## If so, set as source_file
                 source_file="$( which "${file}" )"
@@ -75,7 +77,7 @@ function core::import {
 
         if [[ ! -f "${source_file}" ]]
         then
-            echo "ERROR: ${FUNCNAME[*]}: Import invalid: $( basename ${file} )" > /dev/stderr
+            echo "ERROR: ${FUNCNAME[*]}: Import invalid: $( basename "${file}" )" > /dev/stderr
             continue
         fi
 

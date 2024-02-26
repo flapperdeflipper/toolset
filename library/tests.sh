@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2312
 
 ################################################################################
 ## Run bats test                                                              ##
@@ -6,7 +7,7 @@
 
 function tests::runtests {
     (
-        cd "${TOOLSET_LIBRARY_PATH}" || return 1
+        cd "${TOOLSET_LIBRARY_PATH:-}" || return 1
 
         if var::lt "${#}" 1
         then

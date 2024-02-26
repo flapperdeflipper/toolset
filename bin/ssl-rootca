@@ -1,6 +1,11 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
+
 
 ## Print help output
 function usage {
@@ -13,7 +18,7 @@ function usage {
     ssl-intermediate script to create a new keypair that can be used for
     generating utility ssl certificates.
 
-    ${TOOLSET_SCRIPT_NAME} -b <basedir> [-c <curve>]
+    ${TOOLSET_SCRIPT_NAME:-${0}} -b <basedir> [-c <curve>]
 
     Arguments:
       -b, --basedir  - The basedir from where to create certs
@@ -23,7 +28,7 @@ function usage {
       -p, --password - Use a password instead of generating one.
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} --basedir /mnt/storage/certs
+      ${TOOLSET_SCRIPT_NAME:-${0}} --basedir /mnt/storage/certs
 
 EOF
 
@@ -44,7 +49,7 @@ function main {
     depends::check_list openssl pwgen chronic || return 1
 
     ## Parse command line arguments
-    while [ "${1:-""}" != "" ]
+    while [[ "${1:-""}" != "" ]]
     do
        case "${1}" in
            -h|--help)

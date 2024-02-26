@@ -1,6 +1,10 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
 
 
 ## Print help output
@@ -13,13 +17,13 @@ function usage {
     It removes the old one, creates a new one and does a forced push for only
     tags to ensure the new tag is set live.
 
-    ${TOOLSET_SCRIPT_NAME} <tag>
+    ${TOOLSET_SCRIPT_NAME:-${0}} <tag>
 
    Arguments:
     -h, --help  - Show this menu
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} v0.0.1
+      ${TOOLSET_SCRIPT_NAME:-${0}} v0.0.1
 
 EOF
 

@@ -1,6 +1,10 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
 
 
 ## Print help output
@@ -13,7 +17,7 @@ function usage {
     It is a wrapper for easily using the kubeseal utility provided by the sealed
     secret controller.
 
-    ${TOOLSET_SCRIPT_NAME} -n <namespace> -i <filename> -i
+    ${TOOLSET_SCRIPT_NAME:-${0}} -n <namespace> -i <filename> -i
 
     Arguments:
       -n, --namespace        - The namespace for which we should seal the secret
@@ -31,8 +35,8 @@ function usage {
         export KUBESEAL_CONTROLLER_NAMESPACE=kube-system
 
     Example:
-      cat some.yaml | ${TOOLSET_SCRIPT_NAME} -n default -o default/somesec.yaml
-      ${TOOLSET_SCRIPT_NAME} -n default -f some.yaml -o default/somesec.yaml
+      cat some.yaml | ${TOOLSET_SCRIPT_NAME:-${0}} -n default -o default/somesec.yaml
+      ${TOOLSET_SCRIPT_NAME:-${0}} -n default -f some.yaml -o default/somesec.yaml
 
 EOF
 
@@ -52,7 +56,7 @@ function main {
     var::le "${#}" 1 && usage
 
     ## Parse command line arguments
-    while [ "${1:-""}" != "" ]
+    while [[ "${1:-""}" != "" ]]
     do
        case "${1}" in
            -h|--help)
@@ -99,7 +103,7 @@ function main {
     done
 
     ## Redirect stdin to file
-    if [ -z "${filename}" ]
+    if [[ -z "${filename}" ]]
     then
         log::info "Redirecting stdin to a tempfile"
 
@@ -130,7 +134,7 @@ function main {
     ## Seal the secret
     log::info  "Sealing secret ${filename} to ${output}"
 
-    if ! k8s::kubeseal ${arguments[*]} < "${filename}" > "${output}"
+    if ! k8s::kubeseal "${arguments[@]}" < "${filename}" > "${output}"
     then
         log::error "${FUNCNAME[0]}: Failed to seal ${filename} to ${output}"
         return 1

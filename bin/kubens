@@ -15,6 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# shellcheck disable=SC2310,SC2312
 
 if [[ -n "${DEBUG}" ]] \
 && [[ "${DEBUG}" -eq 1 ]]
@@ -27,7 +28,7 @@ IFS=$'\n\t'
 
 SELF_CMD="$0"
 
-KUBENS_DIR="${XDG_CACHE_HOME:-$HOME/.kube}/kubens"
+KUBENS_DIR="${XDG_CACHE_HOME:-${HOME}/.kube}/kubens"
 
 usage() {
   local SELF
@@ -45,11 +46,11 @@ usage() {
     need of using -n or --namespace in each kubectl command.
 
     USAGE:
-      $SELF                    : list the namespaces in the current context
-      $SELF <NAME>             : change the active namespace of current context
-      $SELF -                  : switch to the previous namespace in this context
-      $SELF -c, --current      : show the current namespace
-      $SELF -h,--help          : show this message
+      ${SELF}                    : list the namespaces in the current context
+      ${SELF} <NAME>             : change the active namespace of current context
+      ${SELF} -                  : switch to the previous namespace in this context
+      ${SELF} -c, --current      : show the current namespace
+      ${SELF} -h,--help          : show this message
 
 EOF
 }
@@ -63,7 +64,7 @@ current_namespace() {
   local cur_ctx
 
   cur_ctx="$(current_context)" || exit_err "error getting current context"
-  ns="$($KUBECTL config view -o=jsonpath="{.contexts[?(@.name==\"${cur_ctx}\")].context.namespace}")" \
+  ns="$( "${KUBECTL}" config view -o=jsonpath="{.contexts[?(@.name==\"${cur_ctx}\")].context.namespace}")" \
      || exit_err "error getting current namespace"
 
   if [[ -z "${ns}" ]]; then
@@ -74,11 +75,11 @@ current_namespace() {
 }
 
 current_context() {
-  $KUBECTL config current-context
+  ${KUBECTL} config current-context
 }
 
 get_namespaces() {
-  $KUBECTL get namespaces -o=jsonpath='{range .items[*].metadata.name}{@}{"\n"}{end}'
+  ${KUBECTL} get namespaces -o=jsonpath='{range .items[*].metadata.name}{@}{"\n"}{end}'
 }
 
 escape_context_name() {
@@ -112,7 +113,7 @@ save_namespace() {
 
 switch_namespace() {
   local ctx="${1}"
-  $KUBECTL config set-context "${ctx}" --namespace="${2}"
+  ${KUBECTL} config set-context "${ctx}" --namespace="${2}"
   echo "Active namespace is \"${2}\".">&2
 }
 
@@ -120,7 +121,7 @@ choose_namespace_interactive() {
   # directly calling kubens via fzf might fail with a cryptic error like
   # "$FZF_DEFAULT_COMMAND failed", so try to see if we can list namespaces
   # locally first
-  if [[ -z "$(list_namespaces)" ]]; then
+  if [[ -z "$( list_namespaces || true )" ]]; then
     echo >&2 "error: could not list namespaces (is the cluster accessible?)"
     exit 1
   fi
@@ -142,7 +143,7 @@ set_namespace() {
   ctx="$(current_context)" || exit_err "error getting current context"
   prev="$(current_namespace)" || exit_error "error getting current namespace"
 
-  if grep -q ^"${1}"\$ <(get_namespaces); then
+  if grep -q ^"${1}"\$ <( get_namespaces ); then
     switch_namespace "${ctx}" "${1}"
 
     if [[ "${prev}" != "${1}" ]]; then
@@ -161,14 +162,14 @@ list_namespaces() {
   normal=$(tput sgr0 || true)
 
   local cur_ctx_fg cur_ctx_bg
-  cur_ctx_fg=${KUBECTX_CURRENT_FGCOLOR:-$yellow}
-  cur_ctx_bg=${KUBECTX_CURRENT_BGCOLOR:-$darkbg}
+  cur_ctx_fg="${KUBECTX_CURRENT_FGCOLOR:-${yellow}}"
+  cur_ctx_bg="${KUBECTX_CURRENT_BGCOLOR:-${darkbg}}"
 
   local cur ns_list
   cur="$(current_namespace)" || exit_err "error getting current namespace"
   ns_list=$(get_namespaces) || exit_err "error getting namespace list"
 
-  for c in $ns_list; do
+  for c in ${ns_list}; do
   if [[ -n "${_KUBECTX_FORCE_COLOR:-}" || \
        -t 1 && -z "${NO_COLOR:-}" ]]; then
     # colored output mode

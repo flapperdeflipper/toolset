@@ -1,6 +1,10 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
 
 
 ## Print help output
@@ -9,13 +13,13 @@ function usage {
 
     Drain a k8s node
 
-    ${TOOLSET_SCRIPT_NAME} <node>
+    ${TOOLSET_SCRIPT_NAME:-${0}} <node>
 
    Arguments:
     -h, --help  - Show this menu
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} 10-20-27-3.eu-central-1.compute.internal
+      ${TOOLSET_SCRIPT_NAME:-${0}} 10-20-27-3.eu-central-1.compute.internal
 
 EOF
 

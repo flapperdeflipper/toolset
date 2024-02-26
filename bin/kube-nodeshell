@@ -1,6 +1,11 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091,SC2310
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
+
 
 function create_manifest {
     local nodename="${1:-""}"
@@ -72,7 +77,7 @@ function usage() {
     uses chroot to enter the nodes filesystem as if you were logged in on a node
     itself.
 
-    ${TOOLSET_SCRIPT_NAME} -n <namespace> -s <servername>
+    ${TOOLSET_SCRIPT_NAME:-${0}} -n <namespace> -s <servername>
 
     Arguments:
       --server,    -s - The name of the node to connect to.
@@ -82,7 +87,7 @@ function usage() {
       --podname,   -p - The pod name to use when starting (Default: k8s-nodeshell).
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} -n default -s ip-10-30-65-200.eu-central-1.compute.internal
+      ${TOOLSET_SCRIPT_NAME:-${0}} -n default -s ip-10-30-65-200.eu-central-1.compute.internal
 
 EOF
 
@@ -103,7 +108,7 @@ function main {
     local fullpodname
 
     ## Parse command line arguments
-    while [ "${1:-""}" != "" ]
+    while [[ "${1:-""}" != "" ]]
     do
         case "${1}"
         in
@@ -123,6 +128,10 @@ function main {
                 podname="${2:-""}"
                 shift
 	        ;;
+            *)
+                log::error "Invalid input: ${1}"
+                exit 1
+            ;;
         esac
 
         shift || true

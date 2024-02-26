@@ -1,6 +1,10 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091,SC2016
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
 
 
 ## Print help output
@@ -12,7 +16,7 @@ function usage {
     This script can be used to find pods in a k8s cluster of which the pod name
     matches a given regext.
 
-    ${TOOLSET_SCRIPT_NAME} <regex> [<arguments>]
+    ${TOOLSET_SCRIPT_NAME:-${0}} <regex> [<arguments>]
 
    Arguments:
     -ns, --namespace - Print the namespace too
@@ -20,7 +24,7 @@ function usage {
     -h, --help   - Show this menu
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} kube -ns
+      ${TOOLSET_SCRIPT_NAME:-${0}} kube -ns
 
 EOF
 

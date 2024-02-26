@@ -1,6 +1,10 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash disable=SC2154
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
 
 
 ## Print help output
@@ -12,13 +16,13 @@ function usage {
     This script does a find with a recursive grep in a directory and opens all files that
     are matching a given regular expression.
 
-    ${TOOLSET_SCRIPT_NAME} <regex> [-h|--help]
+    ${TOOLSET_SCRIPT_NAME:-${0}} <regex> [-h|--help]
 
     Arguments:
       -h, --help  - Show this menu
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} kube
+      ${TOOLSET_SCRIPT_NAME:-${0}} kube
 
 EOF
 
@@ -38,7 +42,7 @@ function main {
     local -r directory="${2:-.}"
     local -r arguments="${3:--type f}"
 
-    # shellcheck disable=SC2046,SC2068
+    # shellcheck disable=SC2046,SC2086
     find "${directory}" ${arguments} \
         | grep -Is ${regex} \
         | grep -v '/\.git/' \

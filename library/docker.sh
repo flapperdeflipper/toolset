@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2312
 
 ################################################################################
 ## docker-compose functions                                                   ##

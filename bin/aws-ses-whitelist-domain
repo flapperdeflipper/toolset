@@ -1,6 +1,11 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
+
 
 ## Print help output
 function usage {
@@ -11,7 +16,7 @@ function usage {
     This script registers or retrieves the status and required DNS records
     for SES domain whitelisting
 
-    ${TOOLSET_SCRIPT_NAME} --domain <fqdn> --region <aws region>
+    ${TOOLSET_SCRIPT_NAME:-${0}} --domain <fqdn> --region <aws region>
 
     Arguments:
       --domain   - The domain name to start ses verification for.
@@ -20,7 +25,7 @@ function usage {
       --region   - The access key id of the aws account
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} --domain example.com --region eu-west-1
+      ${TOOLSET_SCRIPT_NAME:-${0}} --domain example.com --region eu-west-1
 
 EOF
 
@@ -39,31 +44,33 @@ function main {
     local arguments=""
 
     ## Parse command line arguments
-    while [ "${1:-""}" != "" ]
+    while [[ "${1:-""}" != "" ]]
     do
         case "${1}"
         in
-	    --help|-h)
-	        usage 0
+	        --help|-h)
+	            usage 0
 	        ;;
-	    --domain|-d)
-            domain="${2:-""}"
-            shift
-	    ;;
-        --region)
-              region="${2:-""}"
-              shift
-        ;;
-        *)
-            arguments="${arguments} ${1:-""} ${2:-""}"
-            shift
-        ;;
+
+	        --domain|-d)
+                domain="${2:-""}"
+                shift
+	        ;;
+
+            --region)
+                  region="${2:-""}"
+                  shift
+            ;;
+            *)
+                arguments="${arguments} ${1:-""} ${2:-""}"
+                shift
+            ;;
         esac
 
         shift
     done
 
-    if [ -z "${domain}" ]
+    if [[ -z "${domain}" ]]
     then
         usage 0
     fi

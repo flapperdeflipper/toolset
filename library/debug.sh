@@ -40,13 +40,13 @@ function debug::handle_error() {
         output_array+=("source_trace: [${BASH_SOURCE[*]}]")
     fi
 
-    printf "${red}"
+    printf '%s' "${red}"
     printf '\n'
     printf "\t>>> Error during execution\n"
     printf '\n'
     printf '\t%s\n' "${output_array[@]}" >&2
     printf '\n'
-    printf "${reset}"
+    printf '%s' "${reset}"
 
     exit "${code}"
 }

@@ -1,6 +1,10 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
 
 
 ## Print help output
@@ -11,14 +15,14 @@ function usage {
 
     This script generates a dhparam.pem file that is needed for ssl setups.
 
-    ${TOOLSET_SCRIPT_NAME} -f <filename> -k 4096
+    ${TOOLSET_SCRIPT_NAME:-${0}} -f <filename> -k 4096
 
     Optional arguments:
     -f, --filename    - The filename to write the key to. (Default: ./dhparam.pem)
     -k, --keysize     - The size to use for the key.      (Default: 4096)
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} --keysize 4096 -f ./dhparam.pem
+      ${TOOLSET_SCRIPT_NAME:-${0}} --keysize 4096 -f ./dhparam.pem
 
 EOF
 
@@ -38,7 +42,7 @@ function main {
     depends::check::silent "openssl" || return 1
 
     ## Parse command line arguments
-    while [ "${1:-""}" != "" ]
+    while [[ "${1:-""}" != "" ]]
     do
        case "${1}" in
            -h|--help)
@@ -95,4 +99,3 @@ function main {
 }
 
 main "${@}"
-

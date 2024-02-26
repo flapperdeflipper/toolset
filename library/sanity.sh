@@ -2,6 +2,7 @@
 ################################################################################
 ## Sanity checker                                                             ##
 ################################################################################
+# shellcheck disable=SC2312
 
 function sanity::check {
     local input="${1}"
@@ -9,7 +10,7 @@ function sanity::check {
     log::trace "${FUNCNAME[*]}: Retrieving and importing sanity checks"
 
     ## Source all sanity checks
-    for testfile in "${SANITY_CHECK_PATH}"/*.sh
+    for testfile in "${SANITY_CHECK_PATH:-}"/*.sh
     do
         # Verbose output
         var::has_value "${input}" \
@@ -52,5 +53,3 @@ function sanity::check {
 
     return 0
 }
-
-

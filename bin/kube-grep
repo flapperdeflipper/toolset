@@ -1,6 +1,10 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
 
 
 ## Print help output
@@ -12,7 +16,7 @@ function usage {
     This script can retrieve k8s objects in a cluster that match a given regex.
     It can be used to provide an overview of existing objects.
 
-    ${TOOLSET_SCRIPT_NAME} -r <regex> -i <object> [<options>]
+    ${TOOLSET_SCRIPT_NAME:-${0}} -r <regex> -i <object> [<options>]
 
    Arguments:
     -i, --object - Give k8s object
@@ -24,7 +28,7 @@ function usage {
     -h, --help   - Show this menu
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} -r kube -i deploy -n default -A
+      ${TOOLSET_SCRIPT_NAME:-${0}} -r kube -i deploy -n default -A
 
 EOF
 

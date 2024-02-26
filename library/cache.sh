@@ -33,7 +33,7 @@ function cache::init {
             log::error "${FUNCNAME[0]}: Failed to create ${cachedir}"
             return 1
         else
-            cache::set "initialized" "$( date )" || return 1
+            cache::set "initialized" "$( date || true )" || return 1
         fi
     fi
 
@@ -125,7 +125,7 @@ function cache::set {
     log::trace "${FUNCNAME[0]}: ${*} - Setting ${key}:${value} in cache"
     cache::warning || return 1
 
-    if ! printf "%s" "$value" > "${cachedir}/${key}.${cache_extension}"
+    if ! printf "%s" "${value}" > "${cachedir}/${key}.${cache_extension}"
     then
         log::warning "${FUNCNAME[0]}: Failed to set ${key} in cache"
         return 1
@@ -175,4 +175,3 @@ function cache::flushall {
 
     return 0
 }
-

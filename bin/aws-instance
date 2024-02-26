@@ -1,6 +1,11 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash disable=SC2048,SC2154
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
+
 
 ## Print help output
 function usage() {
@@ -12,7 +17,7 @@ function usage() {
     retrieving information about the given instance.
 
     Usage:
-      ${TOOLSET_SCRIPT_NAME} --instance <instance> <arguments> <command>
+      ${TOOLSET_SCRIPT_NAME:-${0}} --instance <instance> <arguments> <command>
 
     Required arguments:
       --instance, -i - The host to connect to with SSH (internal hostname, ip address or aws instance id)
@@ -37,34 +42,34 @@ function usage() {
 
     Example:
       ## Open a SSH session
-      ${TOOLSET_SCRIPT_NAME} --instance ip-10-30-65-200.eu-west-1.compute.internal --ssh
+      ${TOOLSET_SCRIPT_NAME:-${0}} --instance ip-10-30-65-200.eu-west-1.compute.internal --ssh
 
       ## Push an ssh key
-      ${TOOLSET_SCRIPT_NAME} --instance ip-10-30-65-200.eu-west-1.compute.internal --ssh-key ~/.ssh/id_rsa --ssh-user ubuntu
+      ${TOOLSET_SCRIPT_NAME:-${0}} --instance ip-10-30-65-200.eu-west-1.compute.internal --ssh-key ~/.ssh/id_rsa --ssh-user ubuntu
 
       ## Setup a tunnel (use: local_port:remote_port)
-      ${TOOLSET_SCRIPT_NAME} --instance 10.30.65.200 --tunnel 10080:80
+      ${TOOLSET_SCRIPT_NAME:-${0}} --instance 10.30.65.200 --tunnel 10080:80
 
       ## Run command:
-      ${TOOLSET_SCRIPT_NAME} --instance 10.30.65.200 -v "ps -ef"
+      ${TOOLSET_SCRIPT_NAME:-${0}} --instance 10.30.65.200 -v "ps -ef"
 
       ## Open console
-      ${TOOLSET_SCRIPT_NAME} --instance i-0f8d56785c4959883 --console
+      ${TOOLSET_SCRIPT_NAME:-${0}} --instance i-0f8d56785c4959883 --console
 
       ## Info:
-      ${TOOLSET_SCRIPT_NAME} --instance i-0f8d56785c4959883 --info
+      ${TOOLSET_SCRIPT_NAME:-${0}} --instance i-0f8d56785c4959883 --info
 
       ## Session
-      ${TOOLSET_SCRIPT_NAME} --instance i-0f8d56785c4959883 --session
+      ${TOOLSET_SCRIPT_NAME:-${0}} --instance i-0f8d56785c4959883 --session
 
       ## Open web
-      ${TOOLSET_SCRIPT_NAME} --instance i-0f8d56785c4959883 --web
+      ${TOOLSET_SCRIPT_NAME:-${0}} --instance i-0f8d56785c4959883 --web
 
       ## Reboot
-      ${TOOLSET_SCRIPT_NAME} --instance i-0f8d56785c4959883 --reboot
+      ${TOOLSET_SCRIPT_NAME:-${0}} --instance i-0f8d56785c4959883 --reboot
 
       ## Terminate
-      ${TOOLSET_SCRIPT_NAME} --instance i-0f8d56785c4959883 --terminate
+      ${TOOLSET_SCRIPT_NAME:-${0}} --instance i-0f8d56785c4959883 --terminate
 EOF
 
    exit "${1:-0}"
@@ -97,14 +102,15 @@ function main() {
     local -i terminate=0
 
     ## Set shortcuts for symlinks
-    case "${TOOLSET_SCRIPT_NAME}" in
+    case "${TOOLSET_SCRIPT_NAME:-${0}}" in
         terminate) terminate=1 ;;
         ec2info)   info=1      ;;
         awssh)     ssh=1       ;;
+        *)                     ;;
     esac
 
     ## Parse command line arguments
-    while [ "${1:-""}" != "" ]
+    while [[ "${1:-""}" != "" ]]
     do
         case "${1}" in
             -h|--help)
@@ -208,7 +214,7 @@ function main() {
         exit::error "Invalid input for ${instance}: Instance input is not an id, not an internal ip and not a DNS name..."
     fi
 
-    if [ -n "${dryrun}" ]
+    if [[ -n "${dryrun}" ]]
     then
        log::warning "Dry-run detected!"
     fi
@@ -311,7 +317,9 @@ function main() {
     ## Show web console on request
     if var::eq "${web}" 1
     then
-        ${dryrun} open "$( aws::ec2::weblink "${instance_id}" "${region}" )"
+        local weblink
+              weblink="$( aws::ec2::weblink "${instance_id}" "${region}" )"
+        ${dryrun} open "${weblink}"
         return $?
     fi
 

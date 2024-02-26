@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2312,SC2248
 
 ##
 ## Check is a password is known by hibp
@@ -57,7 +58,7 @@ function hibp::check {
 
     local arguments=""
 
-    if var::has_value "${TRACE}" \
+    if var::has_value "${TRACE:-}" \
     && var::eq "${TRACE}" 1
     then
         arguments="-v"
@@ -80,7 +81,7 @@ function hibp::check {
     fi
 
     status="${response##*$'\n'}"
-    response="${response%"$status"}"
+    response="${response%"${status}"}"
 
     log::debug "Uri: /range/${password:0:5}"
     log::debug "Status code: ${status}"

@@ -1,6 +1,11 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
+
 
 function usage() {
     cat <<EOF
@@ -64,7 +69,7 @@ function git::provider_uri {
                     printf -- "-/pipelines?page=1&scope=all&ref=master"
                     ;;
                 --mypipe)
-                    printf -- "/-pipelines?pipelines?page=1&scope=all&username=${GIT_USERNAME:-}"
+                    printf -- "/-pipelines?pipelines?page=1&scope=all&username=%s" "${GIT_USERNAME:-}"
                     ;;
                 --ci-visual|-v)
                     printf -- "-/ci/editor?tab=1"
@@ -79,7 +84,7 @@ function git::provider_uri {
                     printf -- "-/merge_requests"
                     ;;
                 --mymr)
-                    printf -- "-/merge_requests?scope=all&state=opened&author_username=${GIT_USERNAME:-}"
+                    printf -- "-/merge_requests?scope=all&state=opened&author_username=%s" "${GIT_USERNAME:-}"
                     ;;
                 --ci|--config|-c)
                     printf -- "-/settings/ci_cd"
@@ -98,9 +103,9 @@ function git::provider_uri {
                     var::equals "${arguments}" "--master" && branch="master"
 
                     local abspath
-                          abspath="$( realpath --relative-to="$( git::basedir )" . )"
+                          abspath="$( realpath --relative-to="$( git::basedir || true )" . )"
 
-                    printf -- "-/tree/${branch}/${abspath}"
+                    printf "-/tree/%s/%s" "${branch}" "${abspath}"
                     ;;
             esac
             ;;
@@ -157,7 +162,7 @@ function main {
      || interact::in_args "--mymr" "${@}"
     )
     then
-        open "https://gitlab.com/dashboard/merge_requests?assignee_username=$GIT_USERNAME"
+        open "https://gitlab.com/dashboard/merge_requests?assignee_username=${GIT_USERNAME}"
         exit 0
     fi
 

@@ -1,6 +1,11 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
+
 
 ##
 ## Show usage info
@@ -44,7 +49,7 @@ function helm::current_version {
     fi
 
     current_version="$(
-        basename "$( readlink -f /usr/local/bin/helm )"
+        basename "$( readlink -f /usr/local/bin/helm || true )"
     )"
 
     printf "%s\n" "${current_version//helm-/}"
@@ -128,7 +133,7 @@ function helm::install {
     then
         local actual_version
         actual_version="$(
-            basename "$( readlink -f "${HOME}/.local/bin/helm" )"
+            basename "$( readlink -f "${HOME}/.local/bin/helm" || true )"
         )"
 
         log::warning  "helm is pointing to the ${actual_version//helm-} version"
@@ -163,9 +168,9 @@ function helm::uninstall {
     then
         rm "${HOME}/.local/bin/helm-${version}"
 
-        if fs::exists "$HOME/.helm/${version}"
+        if fs::exists "${HOME}/.helm/${version}"
         then
-           rm -r "$HOME/.helm/${version}"
+           rm -r "${HOME}/.helm/${version}"
         fi
 
         log::info "The version ${version} is uninstalled!"
@@ -252,22 +257,22 @@ function helm::use {
         ln -sf "${HOME}/.local/bin/helm-${version}" /usr/local/bin/helm
         log::info "Done! Now helm points to the ${version} version"
 
-        export HELM_HOME="$HOME/.helm/${version}"
+        export HELM_HOME="${HOME}/.helm/${version}"
     fi
 }
 
 
 function helm::init {
     actual_version="$(
-        basename "$( readlink -e "${HOME}/.local/bin/helm")"
+        basename "$( readlink -e "${HOME}/.local/bin/helm" || true )"
     )"
 
     export HELM_HOME="${HELM_HOME:-${HOME}/.helm/${actual_version//helm-}}"
 
 
-    if [[ ! -e "$HELM_HOME" ]]
+    if [[ ! -e "${HELM_HOME}" ]]
     then
-        mkdir -p "$HELM_HOME"
+        mkdir -p "${HELM_HOME}"
     fi
     if [[ ! -e "${HOME}/.local/bin" ]]
     then
@@ -314,4 +319,3 @@ function main {
 }
 
 main "${@}"
-

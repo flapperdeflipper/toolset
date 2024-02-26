@@ -1,6 +1,10 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
 
 
 ## Print help output
@@ -13,13 +17,13 @@ function usage {
     ~/.ssh/known_hosts file when logging in on a server fails to to a changed
     fingerprint of the remote SSH service.
 
-    ${TOOLSET_SCRIPT_NAME} <lineno>
+    ${TOOLSET_SCRIPT_NAME:-${0}} <lineno>
 
    Arguments:
     -h, --help  - Show this menu
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} 5
+      ${TOOLSET_SCRIPT_NAME:-${0}} 5
 
 EOF
 

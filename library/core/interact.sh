@@ -24,7 +24,7 @@ function interact::prompt_bool {
 
     shift $(( OPTIND - 1 ))
 
-    if [[ "${opts[default_yes]:-}" ]]
+    if [[ -n "${opts[default_yes]:-}" ]]
     then
         prompt+=" [Y/n]"
     else
@@ -41,13 +41,13 @@ function interact::prompt_bool {
     read -r input
 
     # Explicit yes
-    if [[ $input =~ ^[Yy]$ ]]
+    if [[ "${input}" =~ ^[Yy]$ ]]
     then
         return 0
     fi
 
     # Implicit yes
-    if [[ $input == "" ]] && [[ "${opts[default_yes]:-""}" ]]
+    if [[ "${input}" == "" ]] && [[ -n "${opts[default_yes]:-""}" ]]
     then
         return 0
     fi

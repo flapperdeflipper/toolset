@@ -1,6 +1,10 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
 
 
 ## Print help output
@@ -9,7 +13,7 @@ function usage {
 
     Start a shell or run a command in a k8s pod
 
-    ${TOOLSET_SCRIPT_NAME} -r <regex> -n <namespace> -c <command>
+    ${TOOLSET_SCRIPT_NAME:-${0}} -r <regex> -n <namespace> -c <command>
 
     Arguments:
     -r, --regex       The regex to match (uses the first pod in the resultset)
@@ -17,7 +21,7 @@ function usage {
     -c, --command     The command to run on the pod
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} -r somepod -n kube-system -c bash
+      ${TOOLSET_SCRIPT_NAME:-${0}} -r somepod -n kube-system -c bash
 
 EOF
 
@@ -25,7 +29,7 @@ EOF
 }
 
 function main {
-    if [ "${#}" -eq 0 ] ; then
+    if [[ "${#}" -eq 0 ]] ; then
         usage
     fi
 
@@ -34,7 +38,7 @@ function main {
     local namespace=default
 
     ## Parse command line arguments
-    while [ "${1:-""}" != "" ]
+    while [[ "${1:-""}" != "" ]]
     do
         case "$1"
         in
@@ -78,13 +82,14 @@ function main {
         exit::error "Failed to retrieve pod"
     fi
 
-    if [ -z "${pod}" ]
+    if [[ -z "${pod}" ]]
     then
         exit::warning "No pods found in namespace ${namespace} matching regex \"${regex}\""
     fi
 
     log::info "Running command ${cmd} on ${pod}"
 
+    # shellcheck disable=SC2086
     if ! kubectl -n "${namespace}" exec -ti "${pod}" -- ${cmd}
     then
         exit::error "Failed to run command ${cmd} on pod ${pod}"

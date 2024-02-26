@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash disable=SC2048
+# shellcheck shell=bash disable=SC2048,SC2086
 
 ################################################################################
 ## Session managers                                                           ##
@@ -246,4 +246,3 @@ function aws::ssm::parameter::list() {
         --output text \
         ${arguments[*]}
 }
-

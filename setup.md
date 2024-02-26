@@ -149,5 +149,3 @@ function sanity::check::check_that_homebrew_prefix_exists() {
 ```
 
 The sanity check runner can be found in the bash library in `sanity.sh`
-
-

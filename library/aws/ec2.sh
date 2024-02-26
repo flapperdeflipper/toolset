@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash disable=SC2048,SC2068
+# shellcheck shell=bash disable=SC2048,SC2068,SC2086,SC2312
 
 ################################################################################
 ## EC2                                                                        ##
@@ -128,7 +128,7 @@ function aws::ec2::name_to_id {
     log::trace "${FUNCNAME[0]}: ${*} - Retrieving instance id for hostname ${hostname}"
 
     if ! aws::ec2::query_instances 'Reservations[].Instances[]' \
-        --filter "Name=private-dns-name,Values=$hostname" \
+        --filter "Name=private-dns-name,Values=${hostname}" \
         ${arguments[*]} \
         | jq -r '.[0].InstanceId'
     then
@@ -290,7 +290,7 @@ function aws::ec2::reboot {
     log::trace "${FUNCNAME[0]}: ${*} - Rebooting instance ${instance}"
 
     if ! aws::cli ec2 reboot-instances \
-         --instance-ids "$instance_id" \
+         --instance-ids "${instance_id}" \
         ${arguments[*]}
     then
         log::error "${FUNCNAME[0]}: Failed to reboot instance ${instance}"
@@ -425,4 +425,3 @@ function aws::ec2::push_public_key {
         return 1
     fi
 }
-

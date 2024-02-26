@@ -1,6 +1,10 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash disable=SC2154
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
 
 
 ## Print help output
@@ -9,13 +13,13 @@ function usage {
 
     checkout head branch and pull master
 
-    ${TOOLSET_SCRIPT_NAME}
+    ${TOOLSET_SCRIPT_NAME:-${0}}
 
    Arguments:
     -h, --help  - Show this menu
 
     Example:
-      ${TOOLSET_SCRIPT_NAME}
+      ${TOOLSET_SCRIPT_NAME:-${0}}
 
 EOF
 

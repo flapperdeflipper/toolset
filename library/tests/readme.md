@@ -16,5 +16,3 @@ ensure the functions are loaded prior to running tests.
 Not all functions can safely be tested: Scripts with exit functions or colored
 output logging and scripts that call api's like the `aws::` and `k8s::`
 functions are uncovered.
-
-

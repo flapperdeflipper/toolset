@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash disable=SC2048
+# shellcheck shell=bash disable=SC2048,SC2312
 
 
 ################################################################################

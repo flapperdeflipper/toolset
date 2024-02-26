@@ -1,6 +1,11 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
+
 
 ## Print help output
 function usage {
@@ -12,14 +17,14 @@ function usage {
     It removes the VPC, nat gw and related resources to start in a clean
     environment and to prevent issues with default configs
 
-    ${TOOLSET_SCRIPT_NAME} [-h|--help]
+    ${TOOLSET_SCRIPT_NAME:-${0}} [-h|--help]
 
     Arguments:
       -a, --apply - Start removing
       -h, --help  - Show this menu
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} --apply:
+      ${TOOLSET_SCRIPT_NAME:-${0}} --apply:
 
 EOF
 
@@ -35,7 +40,7 @@ function main {
         usage
     fi
 
-    if [ "${AWS_PROFILE:-""}" == "" ]
+    if [[ "${AWS_PROFILE:-""}" == "" ]]
     then
         echo "No AWS_PROFILE set"
         exit 1
@@ -49,12 +54,13 @@ function main {
 
         # get default vpc
         vpc="$( \
-            aws ec2 --region ${region} \
-            describe-vpcs --filter Name=isDefault,Values=true \
+            aws ec2 describe-vpcs \
+                --region "${region}" \
+                --filter Name=isDefault,Values=true \
             | jq -r .Vpcs[0].VpcId \
         )"
 
-        if [ "${vpc}" = "null" ]
+        if [[ "${vpc}" = "null" ]]
         then
             echo "No default vpc found"
             continue
@@ -64,35 +70,46 @@ function main {
 
         # get internet gateway
         igw="$( \
-            aws ec2 --region ${region} \
-            describe-internet-gateways --filter Name=attachment.vpc-id,Values=${vpc} \
+            aws ec2 describe-internet-gateways \
+                --region "${region}" \
+                --filter "Name=attachment.vpc-id,Values=${vpc}" \
             | jq -r .InternetGateways[0].InternetGatewayId \
         )"
 
-        if [ "${igw}" != "null" ]
+        if [[ "${igw}" != "null" ]]
         then
             echo "Detaching and deleting internet gateway ${igw}"
 
-            aws ec2 --region ${region} \
-                detach-internet-gateway --internet-gateway-id ${igw} --vpc-id ${vpc}
+            aws ec2 \
+                detach-internet-gateway \
+                --region "${region}" \
+                --internet-gateway-id "${igw}" \
+                --vpc-id "${vpc}"
 
-            aws ec2 --region ${region} \
-                delete-internet-gateway --internet-gateway-id ${igw}
+            aws ec2 \
+                delete-internet-gateway \
+                --region "${region}" \
+                --internet-gateway-id "${igw}"
         fi
 
         # get subnets
         subnets="$( \
-            aws ec2 --region ${region} \
-                describe-subnets --filter Name=vpc-id,Values=${vpc} \
+            aws ec2 \
+                describe-subnets \
+                --region "${region}" \
+                --filter "Name=vpc-id,Values=${vpc}" \
             | jq -r .Subnets[].SubnetId \
         )"
 
-        if [ "${subnets}" != "null" ]
+        if [[ "${subnets}" != "null" ]]
         then
             for subnet in ${subnets}
             do
                 echo "Deleting subnet ${subnet}"
-                aws ec2 --region ${region} delete-subnet --subnet-id ${subnet}
+                aws ec2 \
+                    delete-subnet \
+                    --region "${region}" \
+                    --subnet-id "${subnet}"
             done
         fi
 
@@ -103,7 +120,10 @@ function main {
 
         # delete default vpc
         echo "Deleting vpc ${vpc}"
-        aws ec2 --region ${region} delete-vpc --vpc-id ${vpc}
+        aws ec2 \
+            delete-vpc \
+            --region "${region}" \
+            --vpc-id "${vpc}"
     done
 }
 

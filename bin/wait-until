@@ -1,6 +1,11 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
+
 
 ## Print help output
 function usage {
@@ -11,7 +16,7 @@ function usage {
     This script waits in a loop until a given condition is met.
     It can be used in scripts to wait and perform a successive action when done.
 
-    ${TOOLSET_SCRIPT_NAME}  --run <command condition> [--sleep <seconds>|--tries <int>|--exitcode <int>]
+    ${TOOLSET_SCRIPT_NAME:-${0}}  --run <command condition> [--sleep <seconds>|--tries <int>|--exitcode <int>]
 
 
     Required arguments:
@@ -29,7 +34,7 @@ function usage {
       1 if condition is not met after N retries
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} --run 'ps -ef | grep -v grep | grep -q kubelet' --tries 5 --sleep 1 --exitcode 1
+      ${TOOLSET_SCRIPT_NAME:-${0}} --run 'ps -ef | grep -v grep | grep -q kubelet' --tries 5 --sleep 1 --exitcode 1
 
 EOF
 
@@ -66,6 +71,10 @@ function main {
             ;;
             -v|--verbose)
                 verbose=1
+            ;;
+            *)
+                log::error "Invalid input: ${1}"
+                exit 1
             ;;
         esac
         shift

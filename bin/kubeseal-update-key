@@ -1,6 +1,10 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
 
 
 ## Print help output
@@ -13,7 +17,7 @@ function usage {
     can be used for encrypting secrets. It is stored locally on disk for reuse
     when storing secrets in a git repository.
 
-    ${TOOLSET_SCRIPT_NAME} -c <cluster> [-i|-n]
+    ${TOOLSET_SCRIPT_NAME:-${0}} -c <cluster> [-i|-n]
 
    Arguments:
     -i, --controller-name      - The name of the sealed secrets controller
@@ -22,7 +26,7 @@ function usage {
     -h, --help                 - Show this menu
 
     Example:
-      ${TOOLSET_SCRIPT_NAME} -c cluster1 -n default -i sealed-secrets
+      ${TOOLSET_SCRIPT_NAME:-${0}} -c cluster1 -n default -i sealed-secrets
 
 EOF
 
@@ -38,7 +42,7 @@ function main {
     var::le "${#}" 1 && usage
 
     ## Parse command line arguments
-    while [ "${1:-""}" != "" ]
+    while [[ "${1:-""}" != "" ]]
     do
        case "${1}" in
            -h|--help)
@@ -84,7 +88,10 @@ function main {
 
     if fs::is_file "${keyfile}"
     then
-        mv "${keyfile}" "${keyfile}.$( date '+%Y%m%d%H%M%S' )"
+        local timestamp
+              timestamp="$( date '+%Y%m%d%H%M%S' )"
+
+        mv "${keyfile}" "${keyfile}.${timestamp}"
     fi
 
     if ! kubeseal \

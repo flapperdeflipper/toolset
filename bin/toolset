@@ -11,9 +11,9 @@
 
 ## Set error handling if not used in an interactive or login shell
 ## Then it should be done in the shell config itself
-if [[ ! "${-}" =~ i ]] \
-&& [[ -z "${BATS_TEST_FILENAME:-}" ]] \
-&& ! shopt -q login_shell
+if ! shopt -q login_shell \
+&& [[ ! "${-}" =~ i ]] \
+&& [[ -z "${BATS_TEST_FILENAME:-}" ]]
 then
     set -o errexit
     set -o errtrace
@@ -29,7 +29,7 @@ fi
 if [[ "${0}" == "-bash" ]]
 then
     ##
-    ## This is a login shell, we're sourced in a local bash environment"
+    ## This is a login shell, we're sourced in a local bash environment
     ##
 
     ## Set the full path to the script that is being executed to an empty string
@@ -56,7 +56,7 @@ then
     ## Set $0 to the script itself
     declare BASH_ARGV0="${1:-}"
 
-    ## Shift the first argument if not empty to remove the scriptname itself which we've set to $0
+    ## Shift the first argument if not empty to remove the scriptname itself which we've just set to $0
     [[ "${#@}" -ne 0 ]] && shift
 
     ## Import the script at the end
@@ -89,7 +89,7 @@ export TOOLSET_BIN_PATH \
        TOOLSET_SCRIPT_NAME \
        TOOLSET_SCRIPT_PATH
 
-## Load the core libraries
+## Load the core libraries first
 for corefile in "${TOOLSET_LIBRARY_PATH}/core"/*.sh
 do
     # shellcheck source=/dev/null
@@ -109,8 +109,9 @@ import ssl
 import system
 import tests
 
-if ( [[ -n "${TRACE}" ]] && [[ "${TRACE}" == 1 ]] ) || [[ "${-}" =~ x ]]
+if { [[ -n "${TRACE}" ]] && [[ "${TRACE}" == 1 ]]; } || [[ "${-}" =~ x ]]
 then
+    ## Trap our handle_error function
     trap 'debug::handle_error "LINENO" "BASH_LINENO" "${BASH_COMMAND}" "${?}"' ERR
 fi
 
@@ -121,6 +122,10 @@ if [[ "${TOOLSET_IMPORT}" -eq 1 ]] \
 && [[ -z "${BATS_TEST_FILENAME:-}" ]] \
 && ! shopt -q login_shell
 then
+    #
+    # Import the script as we're running with toolset as the shebang
+    #
+
     # shellcheck source=/dev/null
     source "${TOOLSET_SCRIPT_PATH}"
 fi

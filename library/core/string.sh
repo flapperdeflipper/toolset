@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2312
 
 ################################################################################
 ## String manipulation                                                        ##
@@ -56,7 +57,7 @@ function string::upper {
 ##
 
 function string::replace {
-    [ "${#}" -ne 3 ] && return 2
+    [[ "${#}" -ne 3 ]] && return 2
 
     local needle="${1}"
     local replacement="${2}"
@@ -133,7 +134,7 @@ function string::trim {
 
     log::trace "${FUNCNAME[0]}: ${*} - Stripping whitespace from string"
 
-    printf "%s\n" "$( xargs <<< "${string}" )"
+    printf '%s\n' "$( xargs <<< "${string}" )"
 }
 
 
@@ -188,14 +189,14 @@ function string::rstrip {
 ##
 
 function string::strip_prefix {
-    [ "${#}" -ne 2 ] && return 2
+    [[ "${#}" -ne 2 ]] && return 2
 
     local -r string="${1}"
     local -r prefix="${2}"
 
     log::trace "${FUNCNAME[0]}: ${*} - Strip prefix ${prefix} from string ${string}"
 
-    printf "%s" "${string##${prefix}}"
+    printf "%s" "${string##"${prefix}"}"
 }
 
 
@@ -204,14 +205,14 @@ function string::strip_prefix {
 ##
 
 function string::strip_suffix {
-    [ "${#}" -ne 2 ] && return 2
+    [[ "${#}" -ne 2 ]] && return 2
 
     local -r string="${1}"
     local -r suffix="${2}"
 
     log::trace "${FUNCNAME[0]}: ${*} - Strip suffix ${suffix} from string ${string}"
 
-    printf "%s" "${string%${suffix}}"
+    printf "%s" "${string%"${suffix}"}"
 }
 
 
@@ -220,7 +221,7 @@ function string::strip_suffix {
 ##
 
 function string::contains {
-    [ "${#}" -ne 2 ] && return 2
+    [[ "${#}" -ne 2 ]] && return 2
 
     local -r needle="${1}"
     local -r haystack="${2}"
@@ -236,7 +237,7 @@ function string::contains {
 ##
 
 function string::startswith {
-    [ "${#}" -ne 2 ] && return 2
+    [[ "${#}" -ne 2 ]] && return 2
 
     local -r needle="${1}"
     local -r haystack="${2}"
@@ -252,7 +253,7 @@ function string::startswith {
 ##
 
 function string::endswith {
-    [ "${#}" -ne 2 ] && return 2
+    [[ "${#}" -ne 2 ]] && return 2
 
     local -r needle="${1}"
     local -r haystack="${2}"
@@ -268,7 +269,7 @@ function string::endswith {
 ##
 
 function string::equals {
-    [ "${#}" -ne 2 ] && return 2
+    [[ "${#}" -ne 2 ]] && return 2
 
     local -r first="${1}"
     local -r second="${2}"
@@ -284,7 +285,7 @@ function string::equals {
 ##
 
 function string::not {
-    [ "${#}" -ne 2 ] && return 2
+    [[ "${#}" -ne 2 ]] && return 2
 
     local -r first="${1}"
     local -r second="${2}"

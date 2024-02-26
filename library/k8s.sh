@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2312
 
 ################################################################################
 ## kubernetes functions                                                       ##
@@ -16,8 +17,8 @@ function k8s::podname {
     echo -n "$( \
         printf "%s-%s-%s" \
           "${podname}" \
-          "$( tr -dc '0-9'    < /dev/urandom | fold -w10 | head -n1 )" \
-          "$( tr -dc 'a-z0-9' < /dev/urandom | fold -w5  | head -n1 )" \
+          "$( tr -dc '0-9'    < /dev/urandom | fold -w10 | head -n1 || true )" \
+          "$( tr -dc 'a-z0-9' < /dev/urandom | fold -w5  | head -n1 || true )" \
     )"
 }
 
@@ -101,7 +102,7 @@ function k8s::grep {
     local refresh=1
 
     ## Parse command line arguments
-    while [ "${1:-}" != "" ]
+    while [[ "${1:-}" != "" ]]
     do
         case "${1}" in
             -w|--wide)

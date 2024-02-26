@@ -1,6 +1,11 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
+
 
 ##
 ## Show usage info
@@ -99,7 +104,7 @@ function kube_env::install {
     then
         local actual_version
         actual_version="$(
-            basename "$( readlink -f /usr/local/bin/kubectl )"
+            basename "$( readlink -f /usr/local/bin/kubectl || true )"
         )"
 
         log::warning "kubectl is pointing to the ${actual_version//kubectl-} version"

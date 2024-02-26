@@ -1,6 +1,11 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
+set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
+
 
 ## Print help output
 function usage {
@@ -12,7 +17,7 @@ function usage {
     as a file or as content in vim. It can be used for easy and quickly editting
     multiple files or put all output of a one liner in vim.
 
-    ${TOOLSET_SCRIPT_NAME} [-f|-c]
+    ${TOOLSET_SCRIPT_NAME:-${0}} [-f|-c]
 
    Arguments:
     -f, --file      - Read filenames from stdin and open in vim
@@ -21,8 +26,8 @@ function usage {
     -h, --help      - Show this menu
 
     Example:
-      \$( which somescript ) | ${TOOLSET_SCRIPT_NAME} -f
-      ps -ef | ${TOOLSET_SCRIPT_NAME} -c
+      \$( which somescript ) | ${TOOLSET_SCRIPT_NAME:-${0}} -f
+      ps -ef | ${TOOLSET_SCRIPT_NAME:-${0}} -c
 
 EOF
 
@@ -40,7 +45,7 @@ function existsfilter {
         fi
     done < /dev/stdin
 
-    printf "${files[*]}"
+    printf "%s\n" "${files[@]}"
 }
 
 
@@ -65,12 +70,19 @@ function main {
                 read_filename=1
                 shift
             ;;
+            *)
+                log::error "Invalid input: ${1}"
+                exit 1
+            ;;
         esac
 
         shift || true
     done
 
-    if ! var::eq "$( var::sum "${read_filename}" "${read_content}" )" 1
+    local optcount
+          optcount="$( var::sum "${read_filename}" "${read_content}" )"
+
+    if ! var::eq "${optcount}" 1
     then
         log::warning "Use either --content or --file"
         usage

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#!/usr/bin/env bash
+# shellcheck disable=SC2312
 
 ## Convert to h264 to reduce the size
 convert="${1:-}"; shift || true

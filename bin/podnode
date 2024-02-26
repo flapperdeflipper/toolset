@@ -1,7 +1,10 @@
-#!/usr/bin/env toolset
+#!/usr/bin/env bash
 # vi: ft=bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
 set -e -u -o pipefail
+
+## source toolset
+source toolset || exit 1
 
 
 ## Print help output
@@ -39,7 +42,7 @@ function main {
 
     podgrep "${regex}" \
         | awk '{print $1 " "$2 " "$8}' \
-        | while read ns pod node
+        | while read -r ns pod node
     do
         log::info "pod: ${pod}  ns: ${ns}"
         podgrep "${node}"
