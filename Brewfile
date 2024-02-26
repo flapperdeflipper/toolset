@@ -64,4 +64,3 @@ brew "wget"
 brew "yamllint"
 brew "yq"
 brew "zoxide"
-
