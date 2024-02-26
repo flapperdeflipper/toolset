@@ -37,7 +37,7 @@ function net::is_ip4 {
         IFS='.'
 
         # shellcheck disable=SC2206
-        segments=( "${ip}" )
+        segments=(${ip})
 
         IFS="${OIFS}"
 

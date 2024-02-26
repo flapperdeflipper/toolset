@@ -196,7 +196,8 @@ function string::strip_prefix {
 
     log::trace "${FUNCNAME[0]}: ${*} - Strip prefix ${prefix} from string ${string}"
 
-    printf "%s" "${string##"${prefix}"}"
+    # shellcheck disable=SC2295
+    printf "%s" "${string##${prefix}}"
 }
 
 
@@ -212,7 +213,8 @@ function string::strip_suffix {
 
     log::trace "${FUNCNAME[0]}: ${*} - Strip suffix ${suffix} from string ${string}"
 
-    printf "%s" "${string%"${suffix}"}"
+    # shellcheck disable=SC2295
+    printf "%s" "${string%${suffix}}"
 }
 
 

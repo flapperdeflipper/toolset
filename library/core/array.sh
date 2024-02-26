@@ -41,7 +41,7 @@ function array::deduplicate {
 
     for i in "${@}"
     do
-        { [[ -z ${i:-} ]] || ${arr_tmp[${i}]} ; } && continue
+        { [[ -z ${i:-} ]] || [[ -n "${arr_tmp[${i}]}" ]]; } && continue
 
         arr_unique+=("${i}") && arr_tmp[${i}]=x
     done
