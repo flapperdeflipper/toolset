@@ -105,7 +105,7 @@ function git::provider_uri {
                     local abspath
                           abspath="$( realpath --relative-to="$( git::basedir || true )" . )"
 
-                    printf "-/tree/%s/%s" "${branch}" "${abspath}"
+                    printf -- "-/tree/%s/%s" "${branch}" "${abspath}"
                     ;;
             esac
             ;;
