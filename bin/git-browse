@@ -71,6 +71,9 @@ function git::provider_uri {
                 --mypipe)
                     printf -- "/-pipelines?pipelines?page=1&scope=all&username=%s" "${GIT_USERNAME:-}"
                     ;;
+                --repo)
+                    printf -- "/-/settings/repository"
+                    ;;
                 --ci-visual|-v)
                     printf -- "-/ci/editor?tab=1"
                     ;;
